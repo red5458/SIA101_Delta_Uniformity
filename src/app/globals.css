@@ -12,6 +12,12 @@
     -webkit-text-size-adjust: 100%;
   }
 
+  /* Keep Edge's native password reveal control from duplicating our custom eye button. */
+  input[type="password"]::-ms-reveal,
+  input[type="password"]::-ms-clear {
+    display: none;
+  }
+
   body {
     @apply bg-cream text-ink antialiased;
   }

@@ -7,6 +7,8 @@ const API_URL = (process.env.API_URL ?? "http://127.0.0.1:4000").replace(
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Allow the phone on the local network to load the development app.
+  allowedDevOrigins: ["192.168.1.6"],
   experimental: {
     optimizePackageImports: ["lucide-react"],
   },

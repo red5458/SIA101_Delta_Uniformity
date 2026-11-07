@@ -52,25 +52,25 @@ export default async function LandingPage() {
     <div className="min-h-dvh bg-cream">
       <header className="border-b border-line">
         <div className="container-page flex h-16 items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-700 text-sm font-black text-gold-200">
+          <div className="flex items-center gap-2.5 max-[380px]:gap-1.5">
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-700 text-sm font-black text-gold-200 max-[380px]:h-8 max-[380px]:w-8">
               BU
             </span>
-            <span className="font-display text-xl font-bold text-brand-900">
+            <span className="font-display text-xl font-bold text-brand-900 max-[380px]:text-lg">
               Uniformity
             </span>
           </div>
-          <nav className="flex items-center gap-2">
+          <nav className="flex shrink-0 items-center gap-2 max-[380px]:gap-1">
             {signedIn ? (
               <Link href="/browse" className="btn-primary">
                 Open marketplace
               </Link>
             ) : (
               <>
-                <Link href="/login" className="btn-ghost">
+                <Link href="/login" className="btn-ghost whitespace-nowrap max-[380px]:px-2 max-[380px]:py-2 max-[380px]:text-xs">
                   Sign in
                 </Link>
-                <Link href="/register" className="btn-primary">
+                <Link href="/register" className="btn-primary whitespace-nowrap max-[380px]:px-2 max-[380px]:py-2 max-[380px]:text-xs">
                   Get started
                 </Link>
               </>

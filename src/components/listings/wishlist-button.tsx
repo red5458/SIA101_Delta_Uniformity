@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Bookmark, BookmarkCheck } from "lucide-react";
+import { Bookmark, BookmarkCheck, LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -49,8 +49,10 @@ export function WishlistButton({
     <button
       type="button"
       onClick={toggle}
+      disabled={pending}
       aria-pressed={saved}
-      aria-label={saved ? "Remove from wishlist" : "Save to wishlist"}
+      aria-busy={pending}
+      aria-label={pending ? "Updating wishlist" : saved ? "Remove from wishlist" : "Save to wishlist"}
       className={cn(
         "inline-flex items-center justify-center gap-2 rounded-full border bg-white/95 font-semibold shadow-sm backdrop-blur transition",
         compact ? "h-9 w-9" : "px-4 py-2.5 text-sm",
@@ -59,7 +61,9 @@ export function WishlistButton({
           : "border-line text-muted hover:text-brand-700",
       )}
     >
-      {saved ? (
+      {pending ? (
+        <LoaderCircle className={cn(compact ? "h-4 w-4" : "h-5 w-5", "animate-spin")} />
+      ) : saved ? (
         <BookmarkCheck className={cn(compact ? "h-4 w-4" : "h-5 w-5")} />
       ) : (
         <Bookmark className={cn(compact ? "h-4 w-4" : "h-5 w-5")} />

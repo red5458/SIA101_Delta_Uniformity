@@ -1,6 +1,10 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Search, SlidersHorizontal, X } from "lucide-react";
 import { CONDITIONS, DEPARTMENTS, DEPARTMENT_LABELS, ITEM_TYPES, SIZES } from "@/lib/constants";
+import { cn } from "@/lib/utils";
 import type { Category } from "@/types/db";
 
 interface Props {
@@ -9,20 +13,32 @@ interface Props {
 }
 
 export function FiltersBar({ categories, current }: Props) {
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const activeFilterCount = [
+    current.department,
+    current.category,
+    current.item_type,
+    current.size,
+    current.condition,
+    current.min_price,
+    current.max_price,
+    current.sort && current.sort !== "newest" ? current.sort : undefined,
+  ].filter(Boolean).length;
+
   return (
     <form
       method="get"
       action="/browse"
-      className="card mb-5 p-3.5 sm:p-4"
+      className="card relative mb-5 p-3.5 sm:grid sm:grid-cols-4 sm:gap-2.5 sm:p-4"
       aria-label="Filter listings"
     >
-      <div className="flex items-center gap-2 text-sm font-semibold text-ink">
+      <div className="hidden items-center gap-2 text-sm font-semibold text-ink sm:col-span-4 sm:flex">
         <SlidersHorizontal className="h-4 w-4 text-brand-600" />
         Find your fit
       </div>
 
-      <div className="mt-3 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
-        <label className="relative sm:col-span-2">
+      <div className="flex gap-2 sm:col-span-2">
+        <label className="relative min-w-0 flex-1">
           <span className="sr-only">Search listings</span>
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
           <input
@@ -32,6 +48,53 @@ export function FiltersBar({ categories, current }: Props) {
             className="input pl-9"
           />
         </label>
+
+        <button
+          type="button"
+          onClick={() => setFiltersOpen(true)}
+          aria-haspopup="dialog"
+          className="btn-secondary shrink-0 px-3 sm:hidden"
+        >
+          <SlidersHorizontal className="h-4 w-4" />
+          <span className="sr-only">Open filters</span>
+          {activeFilterCount > 0 && (
+            <span className="grid h-5 min-w-5 place-items-center rounded-full bg-brand-700 px-1 text-[10px] font-bold text-white">
+              {activeFilterCount}
+            </span>
+          )}
+        </button>
+      </div>
+
+      <div
+        className={cn(
+          filtersOpen
+            ? "fixed inset-0 z-50 flex items-end bg-black/40 p-3 sm:static sm:contents sm:bg-transparent sm:p-0"
+            : "hidden sm:contents",
+        )}
+        onClick={() => setFiltersOpen(false)}
+      >
+        <div
+          role={filtersOpen ? "dialog" : undefined}
+          aria-modal={filtersOpen ? "true" : undefined}
+          aria-labelledby={filtersOpen ? "listing-filters-title" : undefined}
+          className="w-full rounded-2xl bg-white p-4 shadow-xl sm:contents"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <div className="mb-4 flex items-center justify-between sm:hidden">
+            <h2 id="listing-filters-title" className="font-display text-lg font-bold text-ink">
+              Filters
+            </h2>
+            <button
+              type="button"
+              onClick={() => setFiltersOpen(false)}
+              aria-label="Close filters"
+              className="rounded-lg p-2 text-muted hover:bg-brand-50 hover:text-ink"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          <div className="grid max-h-[70dvh] grid-cols-1 gap-2.5 overflow-y-auto sm:contents sm:max-h-none sm:overflow-visible sm:grid-cols-2 lg:grid-cols-4">
 
         <label>
           <span className="sr-only">Department</span>
@@ -121,13 +184,19 @@ export function FiltersBar({ categories, current }: Props) {
           />
         </div>
 
-        <div className="flex gap-2 sm:col-span-2 lg:col-span-4">
-          <button type="submit" className="btn-primary flex-1 sm:flex-none">
+        <div className="flex gap-2 pt-2 sm:col-span-2 sm:pt-0 lg:col-span-4">
+          <button
+            type="submit"
+            onClick={() => setFiltersOpen(false)}
+            className="btn-primary flex-1 sm:flex-none"
+          >
             Apply filters
           </button>
-          <Link href="/browse" className="btn-secondary">
+          <Link href="/browse" onClick={() => setFiltersOpen(false)} className="btn-secondary">
             Clear
           </Link>
+        </div>
+          </div>
         </div>
       </div>
     </form>

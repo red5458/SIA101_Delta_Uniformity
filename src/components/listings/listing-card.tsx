@@ -17,7 +17,7 @@ export function ListingCard({
   )[0];
 
   return (
-    <article className="group card overflow-hidden transition hover:-translate-y-0.5 hover:shadow-lg">
+    <article className="card overflow-hidden">
       <div className="relative aspect-[4/3] overflow-hidden bg-brand-50">
         <Link href={`/listings/${listing.listing_id}`} className="block h-full">
           {photo ? (
@@ -26,7 +26,7 @@ export function ListingCard({
               alt={listing.title}
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-              className="object-cover transition duration-300 group-hover:scale-[1.03]"
+              className="object-cover"
             />
           ) : (
             <div className="grid h-full place-items-center text-sm text-muted">
@@ -35,7 +35,7 @@ export function ListingCard({
           )}
         </Link>
 
-        <div className="absolute left-2.5 top-2.5 flex flex-wrap gap-1.5">
+        <div className="absolute left-2.5 right-12 top-2.5 flex flex-wrap gap-1.5">
           <span className="badge border-white/40 bg-white/90 text-[11px] text-ink">
             {listing.condition}
           </span>

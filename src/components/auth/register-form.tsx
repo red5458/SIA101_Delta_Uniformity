@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   DEPARTMENTS,
@@ -16,6 +16,8 @@ import type { Department } from "@/types/db";
 export function RegisterForm() {
   const router = useRouter();
   const [pending, setPending] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [department, setDepartment] = useState<Department>("CSD");
   const [form, setForm] = useState({
     name: "",
@@ -188,31 +190,53 @@ export function RegisterForm() {
           <label className="label" htmlFor="password">
             Password
           </label>
-          <input
-            id="password"
-            type="password"
-            className="input"
-            value={form.password}
-            onChange={(event) => update("password", event.target.value)}
-            autoComplete="new-password"
-            minLength={8}
-            required
-          />
+          <div className="relative">
+            <input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              className="input pr-11"
+              value={form.password}
+              onChange={(event) => update("password", event.target.value)}
+              autoComplete="new-password"
+              minLength={8}
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((show) => !show)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-pressed={showPassword}
+              className="absolute inset-y-0 right-0 grid w-11 place-items-center rounded-r-xl text-muted hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-400"
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
         </div>
         <div>
           <label className="label" htmlFor="confirmPassword">
             Confirm password
           </label>
-          <input
-            id="confirmPassword"
-            type="password"
-            className="input"
-            value={form.confirmPassword}
-            onChange={(event) => update("confirmPassword", event.target.value)}
-            autoComplete="new-password"
-            minLength={8}
-            required
-          />
+          <div className="relative">
+            <input
+              id="confirmPassword"
+              type={showConfirmPassword ? "text" : "password"}
+              className="input pr-11"
+              value={form.confirmPassword}
+              onChange={(event) => update("confirmPassword", event.target.value)}
+              autoComplete="new-password"
+              minLength={8}
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword((show) => !show)}
+              aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+              aria-pressed={showConfirmPassword}
+              className="absolute inset-y-0 right-0 grid w-11 place-items-center rounded-r-xl text-muted hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-400"
+            >
+              {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
         </div>
       </div>
 
