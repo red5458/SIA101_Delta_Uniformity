@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, MessageSquare, Reply, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Loader2, MessageSquare, Reply, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn, formatRelative, initials } from "@/lib/utils";
 import type { Comment } from "@/types/db";
@@ -28,6 +28,8 @@ interface CommentNodeProps {
   replyTo: string | null;
   replyText: string;
   posting: boolean;
+  expandedReplies: Set<string>;
+  toggleReplies: (commentId: string) => void;
   setReplyTo: (commentId: string | null) => void;
   setReplyText: (text: string) => void;
   post: (parentId: string | null, body: string, reset: () => void) => void;
@@ -59,6 +61,8 @@ function CommentNode({
   replyTo,
   replyText,
   posting,
+  expandedReplies,
+  toggleReplies,
   setReplyTo,
   setReplyText,
   post,
@@ -144,24 +148,42 @@ function CommentNode({
       </div>
 
       {node.children.length > 0 && (
-        <div className="mt-2 space-y-2">
-          {node.children.map((child) => (
-            <CommentNode
-              key={child.comment_id}
-              node={child}
-              depth={depth + 1}
-              sellerId={sellerId}
-              currentUserId={currentUserId}
-              isAdmin={isAdmin}
-              replyTo={replyTo}
-              replyText={replyText}
-              posting={posting}
-              setReplyTo={setReplyTo}
-              setReplyText={setReplyText}
-              post={post}
-              remove={remove}
-            />
-          ))}
+        <div className="mt-2">
+          <button
+            type="button"
+            onClick={() => toggleReplies(node.comment_id)}
+            aria-expanded={expandedReplies.has(node.comment_id)}
+            className="inline-flex items-center gap-1 text-xs font-medium text-brand-700 hover:text-brand-900"
+          >
+            {expandedReplies.has(node.comment_id) ? (
+              <><ChevronUp className="h-3.5 w-3.5" /> Hide replies</>
+            ) : (
+              <><ChevronDown className="h-3.5 w-3.5" /> View {node.children.length} {node.children.length === 1 ? "reply" : "replies"}</>
+            )}
+          </button>
+          {expandedReplies.has(node.comment_id) && (
+            <div className="mt-2 space-y-2">
+              {node.children.map((child) => (
+                <CommentNode
+                  key={child.comment_id}
+                  node={child}
+                  depth={depth + 1}
+                  sellerId={sellerId}
+                  currentUserId={currentUserId}
+                  isAdmin={isAdmin}
+                  replyTo={replyTo}
+                  replyText={replyText}
+                  posting={posting}
+                  expandedReplies={expandedReplies}
+                  toggleReplies={toggleReplies}
+                  setReplyTo={setReplyTo}
+                  setReplyText={setReplyText}
+                  post={post}
+                  remove={remove}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -181,8 +203,20 @@ export function CommentThread({
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
   const [posting, setPosting] = useState(false);
+  const [expandedReplies, setExpandedReplies] = useState<Set<string>>(() => new Set());
+  const [visibleRootCount, setVisibleRootCount] = useState(5);
 
   const tree = useMemo(() => buildTree(comments), [comments]);
+  const visibleRoots = tree.slice(0, visibleRootCount);
+
+  function toggleReplies(commentId: string) {
+    setExpandedReplies((previous) => {
+      const next = new Set(previous);
+      if (next.has(commentId)) next.delete(commentId);
+      else next.add(commentId);
+      return next;
+    });
+  }
 
   async function post(parentId: string | null, body: string, reset: () => void) {
     if (!body.trim()) return;
@@ -215,6 +249,11 @@ export function CommentThread({
           },
         },
       ]);
+      if (parentId) {
+        setExpandedReplies((previous) => new Set(previous).add(parentId));
+      } else {
+        setVisibleRootCount((count) => Math.max(count, tree.length + 1));
+      }
       reset();
       setReplyTo(null);
       toast.success("Posted");
@@ -272,7 +311,7 @@ export function CommentThread({
             No questions yet. Be the first to ask.
           </p>
         ) : (
-          tree.map((node) => (
+          visibleRoots.map((node) => (
             <CommentNode
               key={node.comment_id}
               node={node}
@@ -283,12 +322,24 @@ export function CommentThread({
               replyTo={replyTo}
               replyText={replyText}
               posting={posting}
+              expandedReplies={expandedReplies}
+              toggleReplies={toggleReplies}
               setReplyTo={setReplyTo}
               setReplyText={setReplyText}
               post={post}
               remove={remove}
             />
           ))
+        )}
+        {visibleRootCount < tree.length && (
+          <button
+            type="button"
+            onClick={() => setVisibleRootCount((count) => count + 5)}
+            className="flex w-full items-center justify-center gap-1 rounded-xl border border-line bg-white px-4 py-3 text-sm font-semibold text-brand-700 transition hover:border-brand-200 hover:bg-brand-50/50"
+          >
+            <ChevronDown className="h-4 w-4" />
+            View {Math.min(5, tree.length - visibleRootCount)} more {tree.length - visibleRootCount === 1 ? "comment" : "comments"}
+          </button>
         )}
       </div>
     </section>
