@@ -1,8 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
-import { BadgeCheck, MapPin } from "lucide-react";
+import { MapPin } from "lucide-react";
 import type { Listing } from "@/types/db";
-import { formatPrice, formatRelative } from "@/lib/utils";
+import { formatPrice, formatRelative, initials } from "@/lib/utils";
 import { WishlistButton } from "@/components/listings/wishlist-button";
 
 export function ListingCard({
@@ -78,11 +78,26 @@ export function ListingCard({
           <MapPin className="h-3.5 w-3.5" />
           <span>{listing.department}</span>
           <span aria-hidden>·</span>
-          <span>{formatRelative(listing.created_at)}</span>
+          <span className="sm:hidden">
+            {formatRelative(listing.created_at).replace(/ ago$/, "")}
+          </span>
+          <span className="hidden sm:inline">{formatRelative(listing.created_at)}</span>
         </div>
 
         <div className="mt-2.5 flex items-center gap-1.5 border-t border-line pt-2.5 text-xs text-muted">
-          <BadgeCheck className="h-4 w-4 text-brand-600" />
+          <span className="relative grid h-5 w-5 shrink-0 place-items-center overflow-hidden rounded-full bg-brand-100 text-[8px] font-bold text-brand-800">
+            {listing.seller?.avatar_url ? (
+              <Image
+                src={listing.seller.avatar_url}
+                alt=""
+                fill
+                sizes="20px"
+                className="object-cover"
+              />
+            ) : (
+              initials(listing.seller?.name ?? "Student")
+            )}
+          </span>
           <span className="truncate">
             {listing.seller?.name ?? "Verified student"}
             {listing.seller?.program ? ` · ${listing.seller.program}` : ""}
