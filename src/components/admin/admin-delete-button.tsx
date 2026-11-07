@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 export function AdminDeleteButton({
   endpoint,
@@ -16,9 +17,9 @@ export function AdminDeleteButton({
 }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   async function remove() {
-    if (!confirm(confirmText)) return;
     setPending(true);
     try {
       const response = await fetch(endpoint, { method: "DELETE" });
@@ -27,6 +28,7 @@ export function AdminDeleteButton({
         throw new Error(payload?.error?.message ?? "Delete failed");
       }
       toast.success("Removed");
+      setConfirmOpen(false);
       router.refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Delete failed");
@@ -36,18 +38,29 @@ export function AdminDeleteButton({
   }
 
   return (
-    <button
-      type="button"
-      onClick={remove}
-      disabled={pending}
-      className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-2.5 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
-    >
-      {pending ? (
-        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-      ) : (
-        <Trash2 className="h-3.5 w-3.5" />
-      )}
-      {label}
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={() => setConfirmOpen(true)}
+        disabled={pending}
+        className="inline-flex items-center gap-1 rounded-lg border border-red-200 px-2.5 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
+      >
+        {pending ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        ) : (
+          <Trash2 className="h-3.5 w-3.5" />
+        )}
+        {label}
+      </button>
+      <ConfirmDialog
+        open={confirmOpen}
+        title={label === "Delete" ? "Delete this item?" : `${label} this item?`}
+        description={confirmText}
+        confirmLabel={label}
+        pending={pending}
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={remove}
+      />
+    </>
   );
 }

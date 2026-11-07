@@ -19,7 +19,8 @@ export async function getComments(listingId: string): Promise<CommentRow[]> {
          'user_id', u.user_id,
          'name', u.name,
          'program', u.program,
-         'year_level', u.year_level
+         'year_level', u.year_level,
+         'avatar_url', u.avatar_url
        ) AS author
      FROM comments c
      JOIN users u ON u.user_id = c.user_id

@@ -48,6 +48,7 @@ const LISTING_SELECT = `
       'contact_email', u.contact_email,
       'contact_mobile', u.contact_mobile,
       'contact_messenger', u.contact_messenger,
+      'avatar_url', u.avatar_url,
       'is_verified', u.is_verified
     ) AS seller
   FROM listings l

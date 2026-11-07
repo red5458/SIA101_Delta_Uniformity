@@ -30,6 +30,7 @@ export interface UserRow {
   contact_email: string | null;
   contact_mobile: string | null;
   contact_messenger: string | null;
+  avatar_url: string | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -47,6 +48,7 @@ export interface Profile {
   contact_email: string | null;
   contact_mobile: string | null;
   contact_messenger: string | null;
+  avatar_url: string | null;
   created_at: string;
 }
 
@@ -75,6 +77,7 @@ export interface SellerSummary {
   contact_email: string | null;
   contact_mobile: string | null;
   contact_messenger: string | null;
+  avatar_url: string | null;
   is_verified: boolean;
 }
 
@@ -148,6 +151,7 @@ export function toProfile(user: UserRow): Profile {
     contact_email: user.contact_email,
     contact_mobile: user.contact_mobile,
     contact_messenger: user.contact_messenger,
+    avatar_url: user.avatar_url,
     created_at: user.created_at.toISOString(),
   };
 }

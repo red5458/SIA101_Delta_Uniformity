@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
+import { CheckCircle2, CircleAlert, Info, TriangleAlert, X } from "lucide-react";
 import { Toaster } from "sonner";
 import "./globals.css";
 
@@ -29,7 +30,34 @@ export default function RootLayout({
       </head>
       <body>
         {children}
-        <Toaster richColors position="top-center" closeButton />
+        <Toaster
+          theme="light"
+          position="top-center"
+          closeButton
+          duration={3800}
+          gap={10}
+          offset="16px"
+          mobileOffset="12px"
+          toastOptions={{
+            classNames: {
+              toast: "!rounded-2xl !border-line !bg-white !text-ink !shadow-card",
+              title: "!text-sm !font-semibold !text-ink",
+              description: "!text-xs !text-muted",
+              closeButton: "!border-line !bg-white !text-muted hover:!bg-brand-50",
+              success: "!border-brand-200",
+              info: "!border-brand-200",
+              warning: "!border-gold-200",
+              error: "!border-red-200",
+            },
+          }}
+          icons={{
+            success: <CheckCircle2 className="h-5 w-5 text-brand-700" />,
+            info: <Info className="h-5 w-5 text-brand-600" />,
+            warning: <TriangleAlert className="h-5 w-5 text-gold-700" />,
+            error: <CircleAlert className="h-5 w-5 text-red-600" />,
+            close: <X className="h-3.5 w-3.5" />,
+          }}
+        />
       </body>
     </html>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import {
@@ -47,7 +48,12 @@ export function Header({ profile }: { profile: Profile }) {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-cream/90 backdrop-blur">
+    <header
+      className={cn(
+        "sticky top-0 border-b border-line bg-cream/90 backdrop-blur",
+        open ? "z-50" : "z-40",
+      )}
+    >
       <div className="container-page flex h-16 items-center justify-between gap-3">
         <Link href="/browse" className="flex items-center gap-2.5">
           <BrandLogo className="h-9 w-9" />
@@ -89,8 +95,12 @@ export function Header({ profile }: { profile: Profile }) {
             href="/profile"
             className="flex items-center gap-2 rounded-full border border-line bg-white px-2 py-1.5 transition hover:border-brand-200"
           >
-            <span className="grid h-7 w-7 place-items-center rounded-full bg-brand-700 text-xs font-bold text-white">
-              {initials(profile.name)}
+            <span className="relative grid h-7 w-7 place-items-center overflow-hidden rounded-full bg-brand-700 text-xs font-bold text-white">
+              {profile.avatar_url ? (
+                <Image src={profile.avatar_url} alt="" fill sizes="28px" className="object-cover" />
+              ) : (
+                initials(profile.name)
+              )}
             </span>
             <span className="hidden max-w-28 truncate text-sm font-medium sm:block">
               {profile.name.split(" ")[0]}
@@ -111,6 +121,8 @@ export function Header({ profile }: { profile: Profile }) {
             onClick={() => setOpen((value) => !value)}
             className="btn-secondary h-9 w-9 !px-0 md:hidden"
             aria-label="Toggle menu"
+            aria-expanded={open}
+            aria-controls="mobile-menu"
           >
             {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>
@@ -118,14 +130,22 @@ export function Header({ profile }: { profile: Profile }) {
       </div>
 
       {open && (
-        <div className="border-t border-line bg-white px-4 py-3 md:hidden">
-          <div className="grid gap-1">
+        <div
+          className="fixed inset-x-0 bottom-0 top-16 z-30 bg-ink/30 backdrop-blur-[1px] animate-fade-in md:hidden"
+          onClick={() => setOpen(false)}
+        >
+          <div
+            id="mobile-menu"
+            className="absolute inset-x-0 top-0 rounded-b-2xl border-t border-line bg-white px-4 py-3 shadow-xl animate-menu-drop"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="grid gap-1">
             {NAV.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-ink hover:bg-brand-50"
+                className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-ink transition-[transform,background-color] duration-100 hover:bg-brand-50 active:scale-[0.98] active:bg-brand-100"
               >
                 <item.icon className="h-4 w-4" />
                 {item.label}
@@ -134,7 +154,7 @@ export function Header({ profile }: { profile: Profile }) {
             <Link
               href="/profile"
               onClick={() => setOpen(false)}
-              className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-ink hover:bg-brand-50"
+              className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-ink transition-[transform,background-color] duration-100 hover:bg-brand-50 active:scale-[0.98] active:bg-brand-100"
             >
               <User className="h-4 w-4" />
               Profile
@@ -143,7 +163,7 @@ export function Header({ profile }: { profile: Profile }) {
               <Link
                 href="/admin"
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-ink hover:bg-brand-50"
+                className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-ink transition-[transform,background-color] duration-100 hover:bg-brand-50 active:scale-[0.98] active:bg-brand-100"
               >
                 <Shield className="h-4 w-4" />
                 Admin panel
@@ -153,11 +173,12 @@ export function Header({ profile }: { profile: Profile }) {
               type="button"
               onClick={signOut}
               disabled={pending}
-              className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-red-600 hover:bg-red-50"
+              className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-red-600 transition-[transform,background-color] duration-100 hover:bg-red-50 active:scale-[0.98] active:bg-red-100"
             >
               <LogOut className="h-4 w-4" />
               Sign out
             </button>
+          </div>
           </div>
         </div>
       )}

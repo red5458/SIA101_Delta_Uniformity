@@ -28,6 +28,7 @@ export interface Profile {
   contact_email: string | null;
   contact_mobile: string | null;
   contact_messenger: string | null;
+  avatar_url: string | null;
   created_at: string;
 }
 
@@ -56,6 +57,7 @@ export interface SellerSummary {
   contact_email: string | null;
   contact_mobile: string | null;
   contact_messenger: string | null;
+  avatar_url: string | null;
   is_verified: boolean;
 }
 
@@ -91,6 +93,7 @@ export interface Comment {
     name: string;
     program: string | null;
     year_level: YearLevel | null;
+    avatar_url?: string | null;
   } | null;
 }
 

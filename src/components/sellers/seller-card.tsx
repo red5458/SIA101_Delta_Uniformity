@@ -1,4 +1,5 @@
 import { BadgeCheck, GraduationCap, Mail, MessageCircle, Phone } from "lucide-react";
+import Image from "next/image";
 import { initials } from "@/lib/utils";
 import { DEPARTMENT_LABELS } from "@/lib/constants";
 import type { SellerSummary } from "@/types/db";
@@ -23,8 +24,12 @@ export function SellerCard({ seller }: { seller: SellerSummary | null }) {
       <div className="h-16 bg-gradient-to-r from-brand-800 via-brand-700 to-brand-600" />
       <div className="-mt-8 px-4 pb-4">
         <div className="flex items-end justify-between gap-3">
-          <span className="grid h-16 w-16 place-items-center rounded-2xl border-4 border-white bg-gold-300 text-xl font-black text-brand-900 shadow-sm">
-            {initials(seller.name)}
+          <span className="relative grid h-16 w-16 place-items-center overflow-hidden rounded-2xl border-4 border-white bg-gold-300 text-xl font-black text-brand-900 shadow-sm">
+            {seller.avatar_url ? (
+              <Image src={seller.avatar_url} alt={`${seller.name}'s profile photo`} fill sizes="64px" className="object-cover" />
+            ) : (
+              initials(seller.name)
+            )}
           </span>
           <span className="badge mb-1 border-emerald-200 bg-emerald-50 text-emerald-700">
             <BadgeCheck className="h-3.5 w-3.5" />

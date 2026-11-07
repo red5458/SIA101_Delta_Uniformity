@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, ShieldOff, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 export function SuspendButton({
   userId,
@@ -14,6 +15,7 @@ export function SuspendButton({
 }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   async function toggle() {
     setPending(true);
@@ -28,6 +30,7 @@ export function SuspendButton({
         throw new Error(payload?.error?.message ?? "Could not update user");
       }
       toast.success(suspended ? "Account reinstated" : "Account suspended");
+      setConfirmOpen(false);
       router.refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not update user");
@@ -37,24 +40,40 @@ export function SuspendButton({
   }
 
   return (
-    <button
-      type="button"
-      onClick={toggle}
-      disabled={pending}
-      className={
-        suspended
-          ? "inline-flex items-center gap-1 rounded-lg border border-emerald-200 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
-          : "inline-flex items-center gap-1 rounded-lg border border-amber-200 px-2.5 py-1.5 text-xs font-semibold text-amber-700 hover:bg-amber-50 disabled:opacity-50"
-      }
-    >
-      {pending ? (
-        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-      ) : suspended ? (
-        <ShieldCheck className="h-3.5 w-3.5" />
-      ) : (
-        <ShieldOff className="h-3.5 w-3.5" />
-      )}
-      {suspended ? "Reinstate" : "Suspend"}
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={() => setConfirmOpen(true)}
+        disabled={pending}
+        className={
+          suspended
+            ? "inline-flex items-center gap-1 rounded-lg border border-emerald-200 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
+            : "inline-flex items-center gap-1 rounded-lg border border-amber-200 px-2.5 py-1.5 text-xs font-semibold text-amber-700 hover:bg-amber-50 disabled:opacity-50"
+        }
+      >
+        {pending ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        ) : suspended ? (
+          <ShieldCheck className="h-3.5 w-3.5" />
+        ) : (
+          <ShieldOff className="h-3.5 w-3.5" />
+        )}
+        {suspended ? "Reinstate" : "Suspend"}
+      </button>
+      <ConfirmDialog
+        open={confirmOpen}
+        title={suspended ? "Reinstate this account?" : "Suspend this account?"}
+        description={
+          suspended
+            ? "This user will be able to sign in and use the marketplace again."
+            : "This user will lose access to the marketplace and will not be able to post or save listings."
+        }
+        confirmLabel={suspended ? "Reinstate account" : "Suspend account"}
+        pending={pending}
+        destructive={!suspended}
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={toggle}
+      />
+    </>
   );
 }

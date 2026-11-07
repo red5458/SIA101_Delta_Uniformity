@@ -1,11 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ChevronDown, ChevronUp, Loader2, MessageSquare, Reply, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn, formatRelative, initials } from "@/lib/utils";
 import type { Comment } from "@/types/db";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface Props {
   listingId: string;
@@ -81,8 +83,12 @@ function CommentNode({
       >
         <div className="flex items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2">
-            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-brand-700 text-[10px] font-bold text-white">
-              {initials(node.author?.name ?? "Student")}
+            <span className="relative grid h-7 w-7 shrink-0 place-items-center overflow-hidden rounded-full bg-brand-700 text-[10px] font-bold text-white">
+              {node.author?.avatar_url ? (
+                <Image src={node.author.avatar_url} alt="" fill sizes="28px" className="object-cover" />
+              ) : (
+                initials(node.author?.name ?? "Student")
+              )}
             </span>
             <span className="truncate text-sm font-semibold text-ink">
               {node.author?.name ?? "Student"}
@@ -203,6 +209,8 @@ export function CommentThread({
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState("");
   const [posting, setPosting] = useState(false);
+  const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
+  const [deletingComment, setDeletingComment] = useState(false);
   const [expandedReplies, setExpandedReplies] = useState<Set<string>>(() => new Set());
   const [visibleRootCount, setVisibleRootCount] = useState(5);
 
@@ -266,17 +274,22 @@ export function CommentThread({
   }
 
   async function remove(commentId: string) {
-    if (!confirm("Delete this comment?")) return;
-    const response = await fetch(`/api/comments/${commentId}`, { method: "DELETE" });
-    if (!response.ok) {
-      toast.error("Could not delete comment");
-      return;
+    setDeletingComment(true);
+    try {
+      const response = await fetch(`/api/comments/${commentId}`, { method: "DELETE" });
+      if (!response.ok) throw new Error("Could not delete comment");
+      setComments((prev) => prev.filter((comment) => comment.comment_id !== commentId));
+      setCommentToDelete(null);
+      toast.success("Comment removed");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not delete comment");
+    } finally {
+      setDeletingComment(false);
     }
-    setComments((prev) => prev.filter((comment) => comment.comment_id !== commentId));
-    toast.success("Comment removed");
   }
 
   return (
+    <>
     <section className="card p-4" aria-label="Questions and answers">
       <h2 className="flex items-center gap-2 font-display text-xl font-bold text-ink">
         <MessageSquare className="h-5 w-5 text-brand-600" />
@@ -327,7 +340,7 @@ export function CommentThread({
               setReplyTo={setReplyTo}
               setReplyText={setReplyText}
               post={post}
-              remove={remove}
+              remove={(commentId) => setCommentToDelete(commentId)}
             />
           ))
         )}
@@ -343,5 +356,15 @@ export function CommentThread({
         )}
       </div>
     </section>
+    <ConfirmDialog
+      open={Boolean(commentToDelete)}
+      title="Delete this comment?"
+      description="This comment and its replies will be permanently removed."
+      confirmLabel="Delete comment"
+      pending={deletingComment}
+      onCancel={() => setCommentToDelete(null)}
+      onConfirm={() => commentToDelete && remove(commentToDelete)}
+    />
+    </>
   );
 }
