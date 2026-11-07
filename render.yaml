@@ -1,0 +1,51 @@
+services:
+  - type: web
+    name: uniformity-api
+    runtime: node
+    plan: free
+    rootDir: api
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Supabase session pooler URI (Project Settings -> Database).
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_SSL
+        value: auto
+      - key: DATABASE_SSL_STRICT
+        value: "false"
+      - key: DATABASE_POOL_MAX
+        value: "12"
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: WEB_ORIGIN
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: UPLOAD_DRIVER
+        value: cloudinary
+      # Gmail API OTP delivery. See docs/deployment.md for the OAuth steps.
+      - key: EMAIL_MODE
+        value: gmail
+      - key: GMAIL_USER
+        sync: false
+      - key: GMAIL_CLIENT_ID
+        sync: false
+      - key: GMAIL_CLIENT_SECRET
+        sync: false
+      - key: GMAIL_REFRESH_TOKEN
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+      - key: EXPOSE_DEV_OTP
+        value: "false"

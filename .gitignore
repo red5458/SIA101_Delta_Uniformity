@@ -1,0 +1,36 @@
+
+# AI agent skills
+.agent
+.agents
+.augment
+.claude
+.cline
+.github/copilot*
+.kilocode
+.qoder
+.qwen
+.roo
+.trae
+.windsurf
+
+# Next.js
+node_modules
+.next
+out
+next-env.d.ts
+
+# Environment
+.env
+.env.local
+.env*.local
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Express API build output
+api/dist
+
+# Local development uploads (keep the imported legacy photo)
+public/uploads/*
+!public/uploads/legacy/
+!public/uploads/legacy/**
