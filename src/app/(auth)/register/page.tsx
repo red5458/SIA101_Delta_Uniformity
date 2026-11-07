@@ -10,7 +10,7 @@ export default async function RegisterPage() {
 
   return (
     <div>
-      <h1 className="font-display text-3xl font-bold text-ink">Join Uniformity</h1>
+      <h1 className="font-display text-3xl font-bold text-ink">Join us</h1>
       <p className="mt-1.5 text-sm text-muted">
         Students only. We&apos;ll email a 6-digit code to verify your BU account.
       </p>

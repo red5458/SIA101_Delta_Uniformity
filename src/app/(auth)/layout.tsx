@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BadgeCheck, Bookmark, HandCoins, ShieldCheck, Store } from "lucide-react";
+import { BrandLogo } from "@/components/layout/brand-logo";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -9,9 +10,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-brand-500/30 blur-3xl" />
 
         <Link href="/" className="relative flex items-center gap-2.5">
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-gold-300 text-sm font-black text-brand-900">
-            BU
-          </span>
+          <BrandLogo className="h-10 w-10 rounded-xl bg-white p-1" />
           <span className="font-display text-2xl font-bold">Uniformity</span>
         </Link>
 
@@ -52,10 +51,8 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
       <main className="flex items-center justify-center bg-cream px-4 py-10 sm:px-8">
         <div className="w-full max-w-md">
-          <Link href="/" className="mb-8 flex items-center gap-2 lg:hidden">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-700 text-xs font-black text-gold-200">
-              BU
-            </span>
+          <Link href="/" className="mb-8 flex flex-col items-center gap-2 text-center lg:hidden">
+            <BrandLogo className="h-14 w-14" />
             <span className="font-display text-xl font-bold text-brand-900">
               Uniformity
             </span>

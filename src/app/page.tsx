@@ -10,6 +10,7 @@ import {
   Store,
 } from "lucide-react";
 import { getSession } from "@/lib/auth/session";
+import { BrandLogo } from "@/components/layout/brand-logo";
 
 const FEATURES = [
   {
@@ -53,9 +54,7 @@ export default async function LandingPage() {
       <header className="border-b border-line">
         <div className="container-page flex h-16 items-center justify-between">
           <div className="flex items-center gap-2.5 max-[380px]:gap-1.5">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-700 text-sm font-black text-gold-200 max-[380px]:h-8 max-[380px]:w-8">
-              BU
-            </span>
+            <BrandLogo className="h-9 w-9 max-[380px]:h-8 max-[380px]:w-8" />
             <span className="font-display text-xl font-bold text-brand-900 max-[380px]:text-lg">
               Uniformity
             </span>

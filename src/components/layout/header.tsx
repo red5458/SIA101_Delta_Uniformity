@@ -17,6 +17,7 @@ import {
 import { toast } from "sonner";
 import { cn, initials } from "@/lib/utils";
 import type { Profile } from "@/types/db";
+import { BrandLogo } from "@/components/layout/brand-logo";
 
 const NAV = [
   { href: "/browse", label: "Browse", icon: Store },
@@ -49,9 +50,7 @@ export function Header({ profile }: { profile: Profile }) {
     <header className="sticky top-0 z-40 border-b border-line bg-cream/90 backdrop-blur">
       <div className="container-page flex h-16 items-center justify-between gap-3">
         <Link href="/browse" className="flex items-center gap-2.5">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-700 text-sm font-black text-gold-200">
-            BU
-          </span>
+          <BrandLogo className="h-9 w-9" />
           <span className="font-display text-xl font-bold tracking-tight text-brand-900">
             Uniformity
           </span>
