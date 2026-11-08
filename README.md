@@ -53,6 +53,9 @@ auth design, and layer breakdown.
 - **Verified seller card** — each listing shows the seller's program, year
   level, department, and a *Verified BU Student* badge with email, mobile, and
   Messenger contact links.
+- **Seller storefronts** — click a seller from a listing card, the seller card,
+  or a comment to open `/students/<id>`: the same verified card plus every item
+  that student has posted, with active and sold counts.
 - **Listing CRUD** — create, edit, delete, and toggle `Active` / `Sold`.
 - **Cloud photos** — up to 6 photos per listing, compressed in the browser, then
   uploaded directly to Cloudinary with a short-lived signature scoped to the
@@ -394,6 +397,7 @@ api/
   src/scripts/                Admin bootstrap, db:check, email:test
 src/app/(auth)/               Login, register, verify-email
 src/app/(app)/                Authenticated marketplace pages
+src/app/(app)/students/[id]/  Seller storefront: verified card + their listings
 src/app/(admin)/admin/        Admin overview, listings, users, comments
 src/app/api/[...path]/        Same-origin BFF proxy to Express
 src/components/               UI: listings, comments, sellers, admin, auth

@@ -19,6 +19,31 @@ export function ListingCard({
     (a, b) => a.position - b.position,
   )[0];
   const listingAccent = departmentAccent(listing.department);
+  const sellerHref = listing.seller
+    ? `/students/${listing.seller.user_id}`
+    : null;
+
+  const sellerInfo = (
+    <>
+      <span className="relative grid h-5 w-5 shrink-0 place-items-center overflow-hidden rounded-full bg-brand-100 text-[8px] font-bold text-brand-800">
+        {listing.seller?.avatar_url ? (
+          <Image
+            src={listing.seller.avatar_url}
+            alt=""
+            fill
+            sizes="20px"
+            className="object-cover"
+          />
+        ) : (
+          initials(listing.seller?.name ?? "Student")
+        )}
+      </span>
+      <span className="truncate">
+        {listing.seller?.name ?? "Verified student"}
+        {listing.seller?.program ? ` · ${listing.seller.program}` : ""}
+      </span>
+    </>
+  );
 
   return (
     <article className="card flex h-full flex-col overflow-hidden">
@@ -82,25 +107,19 @@ export function ListingCard({
           <span className="hidden sm:inline">{formatRelative(listing.created_at)}</span>
         </div>
 
-        <div className="mt-2.5 flex items-center gap-1.5 border-t border-line pt-2.5 text-xs text-muted">
-          <span className="relative grid h-5 w-5 shrink-0 place-items-center overflow-hidden rounded-full bg-brand-100 text-[8px] font-bold text-brand-800">
-            {listing.seller?.avatar_url ? (
-              <Image
-                src={listing.seller.avatar_url}
-                alt=""
-                fill
-                sizes="20px"
-                className="object-cover"
-              />
-            ) : (
-              initials(listing.seller?.name ?? "Student")
-            )}
-          </span>
-          <span className="truncate">
-            {listing.seller?.name ?? "Verified student"}
-            {listing.seller?.program ? ` · ${listing.seller.program}` : ""}
-          </span>
-        </div>
+        {sellerHref ? (
+          <Link
+            href={sellerHref}
+            className="mt-2.5 flex items-center gap-1.5 border-t border-line pt-2.5 text-xs text-muted transition-colors hover:text-brand-700"
+            title={`View ${listing.seller?.name ?? "student"}'s listings`}
+          >
+            {sellerInfo}
+          </Link>
+        ) : (
+          <div className="mt-2.5 flex items-center gap-1.5 border-t border-line pt-2.5 text-xs text-muted">
+            {sellerInfo}
+          </div>
+        )}
       </div>
     </article>
   );

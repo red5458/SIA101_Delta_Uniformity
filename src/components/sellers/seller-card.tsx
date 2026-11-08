@@ -1,5 +1,6 @@
-import { BadgeCheck, GraduationCap, Mail, MessageCircle, Phone } from "lucide-react";
+import { ArrowRight, BadgeCheck, GraduationCap, Mail, MessageCircle, Phone } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { initials } from "@/lib/utils";
 import { DEPARTMENT_LABELS, departmentAccent } from "@/lib/constants";
 import type { SellerSummary } from "@/types/db";
@@ -10,7 +11,13 @@ function messengerHref(value: string) {
   return `https://m.me/${handle}`;
 }
 
-export function SellerCard({ seller }: { seller: SellerSummary | null }) {
+export function SellerCard({
+  seller,
+  showProfileLink = true,
+}: {
+  seller: SellerSummary | null;
+  showProfileLink?: boolean;
+}) {
   if (!seller) {
     return (
       <section className="card p-4 text-sm text-muted">
@@ -26,20 +33,35 @@ export function SellerCard({ seller }: { seller: SellerSummary | null }) {
       <div className="h-16 bg-gradient-to-r from-brand-800 via-brand-700 to-brand-600" />
       <div className="-mt-8 px-4 pb-4">
         <div className="flex items-end justify-between gap-3">
-          <span className={`relative grid h-16 w-16 place-items-center overflow-hidden rounded-2xl border-4 border-white bg-gold-300 text-xl font-black text-brand-900 shadow-sm ring-2 ring-offset-1 ring-offset-white ${sellerAccent.ring}`}>
+          <Link
+            href={`/students/${seller.user_id}`}
+            aria-label={`View ${seller.name}'s listings`}
+            className={`relative grid h-16 w-16 place-items-center overflow-hidden rounded-2xl border-4 border-white bg-gold-300 text-xl font-black text-brand-900 shadow-sm ring-2 ring-offset-1 ring-offset-white transition-transform hover:scale-[1.03] ${sellerAccent.ring}`}
+          >
             {seller.avatar_url ? (
               <Image src={seller.avatar_url} alt={`${seller.name}'s profile photo`} fill sizes="64px" className="object-cover" />
             ) : (
               initials(seller.name)
             )}
-          </span>
+          </Link>
           <span className="badge mb-1 border-emerald-200 bg-emerald-50 text-emerald-700">
             <BadgeCheck className="h-3.5 w-3.5" />
             Verified BU Student
           </span>
         </div>
 
-        <h2 className="mt-2.5 font-display text-xl font-bold text-ink">{seller.name}</h2>
+        <h2 className="mt-2.5 font-display text-xl font-bold text-ink">
+          {showProfileLink ? (
+            <Link
+              href={`/students/${seller.user_id}`}
+              className="transition-colors hover:text-brand-700"
+            >
+              {seller.name}
+            </Link>
+          ) : (
+            seller.name
+          )}
+        </h2>
         <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
           <span className="inline-flex items-center gap-1">
             <GraduationCap className="h-4 w-4" />
@@ -54,6 +76,16 @@ export function SellerCard({ seller }: { seller: SellerSummary | null }) {
             </>
           )}
         </div>
+
+        {showProfileLink && (
+          <Link
+            href={`/students/${seller.user_id}`}
+            className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-brand-700 hover:underline"
+          >
+            View all listings
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        )}
 
         <p className="mt-2 rounded-xl bg-brand-50 px-3 py-2 text-xs text-brand-800">
           Transactions happen through an on-campus meetup and cash payment. Message

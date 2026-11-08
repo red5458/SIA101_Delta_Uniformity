@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronDown, ChevronUp, Loader2, MessageSquare, Reply, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -91,16 +92,22 @@ function CommentNode({
       >
         <div className="flex items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2">
-            <span className={`relative grid h-7 w-7 shrink-0 place-items-center overflow-hidden rounded-full border-2 bg-brand-700 text-[10px] font-bold text-white ${authorAccent.avatar}`}>
-              {node.author?.avatar_url ? (
-                <Image src={node.author.avatar_url} alt="" fill sizes="28px" className="object-cover" />
-              ) : (
-                initials(node.author?.name ?? "Student")
-              )}
-            </span>
-            <span className="truncate text-sm font-semibold text-ink">
-              {node.author?.name ?? "Student"}
-            </span>
+            <Link
+              href={`/students/${node.user_id}`}
+              title={`View ${node.author?.name ?? "student"}'s listings`}
+              className="flex min-w-0 items-center gap-2 transition-colors hover:text-brand-700"
+            >
+              <span className={`relative grid h-7 w-7 shrink-0 place-items-center overflow-hidden rounded-full border-2 bg-brand-700 text-[10px] font-bold text-white ${authorAccent.avatar}`}>
+                {node.author?.avatar_url ? (
+                  <Image src={node.author.avatar_url} alt="" fill sizes="28px" className="object-cover" />
+                ) : (
+                  initials(node.author?.name ?? "Student")
+                )}
+              </span>
+              <span className="truncate text-sm font-semibold text-ink">
+                {node.author?.name ?? "Student"}
+              </span>
+            </Link>
             {isSeller && (
               <span className="badge border-gold-300 bg-gold-100 text-[10px] text-brand-800">
                 Seller

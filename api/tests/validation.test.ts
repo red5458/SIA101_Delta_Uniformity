@@ -10,6 +10,7 @@ import {
   listingPhotoSchema,
   listingSchema,
 } from "../src/modules/listings/listings.schema";
+import { sellerIdSchema } from "../src/modules/sellers/sellers.schema";
 
 const validRegistration = {
   name: "Juan Dela Cruz",
@@ -160,6 +161,18 @@ describe("listingSchema", () => {
     expect(
       listingSchema.safeParse({ ...validListing, department: "LAW" }).success,
     ).toBe(false);
+  });
+});
+
+describe("sellerIdSchema", () => {
+  it("accepts a user uuid", () => {
+    expect(
+      sellerIdSchema.safeParse("b5d31ea5-0091-4c39-8a3d-affc8592d351").success,
+    ).toBe(true);
+  });
+
+  it("rejects a non-uuid id", () => {
+    expect(sellerIdSchema.safeParse("not-a-uuid").success).toBe(false);
   });
 });
 

@@ -1,4 +1,5 @@
 import { BadgeCheck, ShieldCheck } from "lucide-react";
+import Link from "next/link";
 import { SuspendButton } from "@/components/admin/suspend-button";
 import { requireAdmin } from "@/lib/auth/session";
 import { listAdminUsers } from "@/lib/data/admin";
@@ -42,7 +43,12 @@ export default async function AdminUsersPage() {
                   <tr key={user.user_id} className="border-b border-line/70 last:border-0">
                     <td className="px-3 py-2.5">
                       <p className="flex items-center gap-1.5 font-medium text-ink">
-                        {user.name}
+                        <Link
+                          href={`/students/${user.user_id}`}
+                          className="transition-colors hover:text-brand-700"
+                        >
+                          {user.name}
+                        </Link>
                         {user.is_admin && (
                           <ShieldCheck className="h-3.5 w-3.5 text-brand-600" />
                         )}

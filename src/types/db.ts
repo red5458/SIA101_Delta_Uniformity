@@ -62,6 +62,16 @@ export interface SellerSummary {
   is_verified: boolean;
 }
 
+export interface SellerProfile extends SellerSummary {
+  created_at: string;
+}
+
+export interface SellerPageData {
+  seller: SellerProfile;
+  listings: Listing[];
+  stats: { active: number; sold: number };
+}
+
 export interface Listing {
   listing_id: string;
   seller_id: string;
