@@ -200,7 +200,7 @@ export function NotificationBell({ initialCount = 0 }: { initialCount?: number }
             onClick={() => setOpen(false)}
             className="fixed inset-0 z-40 cursor-default bg-transparent"
           />
-          <div className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-[min(22rem,calc(100vw-1.5rem))] overflow-hidden rounded-2xl border border-line bg-white shadow-xl">
+          <div className="fixed left-1/2 top-[4.5rem] z-50 w-[min(22rem,calc(100vw-1.5rem))] -translate-x-1/2 overflow-hidden rounded-2xl border border-line bg-white shadow-xl md:absolute md:left-auto md:right-0 md:top-[calc(100%+0.5rem)] md:translate-x-0">
             <div className="flex items-center justify-between gap-2 border-b border-line px-3.5 py-2.5">
               <p className="text-sm font-semibold text-ink">Notifications</p>
               <button
