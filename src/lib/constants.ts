@@ -11,6 +11,7 @@ export const DEPARTMENTS: Department[] = [
   "NURSING",
   "TECHNOLOGY",
   "EDUCATION",
+  "ENTREPRENEURSHIP",
 ];
 
 export const DEPARTMENT_LABELS: Record<Department, string> = {
@@ -19,7 +20,74 @@ export const DEPARTMENT_LABELS: Record<Department, string> = {
   NURSING: "Nursing",
   TECHNOLOGY: "Technology",
   EDUCATION: "Education",
+  ENTREPRENEURSHIP: "Entrepreneurship",
 };
+
+export const DEPARTMENT_SHORT_LABELS: Record<Department, string> = {
+  CSD: "CSD",
+  ENGINEERING: "Engineering",
+  NURSING: "Nursing",
+  TECHNOLOGY: "Tech",
+  EDUCATION: "Educ",
+  ENTREPRENEURSHIP: "Entrep",
+};
+
+export const DEPARTMENT_ACCENTS: Record<Department, { badge: string; dot: string; avatar: string; ring: string; text: string }> = {
+  NURSING: {
+    badge: "border-green-200 bg-green-50 text-green-800",
+    dot: "bg-green-600",
+    avatar: "border-green-600",
+    ring: "ring-green-600",
+    text: "text-green-700",
+  },
+  TECHNOLOGY: {
+    badge: "border-yellow-200 bg-yellow-50 text-yellow-700",
+    dot: "bg-yellow-500",
+    avatar: "border-yellow-400",
+    ring: "ring-yellow-400",
+    text: "text-yellow-600",
+  },
+  EDUCATION: {
+    badge: "border-blue-200 bg-blue-50 text-blue-800",
+    dot: "bg-blue-600",
+    avatar: "border-blue-600",
+    ring: "ring-blue-600",
+    text: "text-blue-700",
+  },
+  ENGINEERING: {
+    badge: "border-red-200 bg-red-50 text-red-800",
+    dot: "bg-red-600",
+    avatar: "border-red-600",
+    ring: "ring-red-600",
+    text: "text-red-700",
+  },
+  ENTREPRENEURSHIP: {
+    badge: "border-violet-200 bg-violet-50 text-violet-800",
+    dot: "bg-violet-600",
+    avatar: "border-violet-600",
+    ring: "ring-violet-600",
+    text: "text-violet-700",
+  },
+  CSD: {
+    badge: "border-pink-200 bg-pink-50 text-pink-800",
+    dot: "bg-pink-600",
+    avatar: "border-pink-600",
+    ring: "ring-pink-600",
+    text: "text-pink-700",
+  },
+};
+
+export function departmentAccent(department: Department | null | undefined) {
+  return department
+    ? DEPARTMENT_ACCENTS[department]
+    : {
+        badge: "border-line bg-brand-50 text-muted",
+        dot: "bg-muted",
+        avatar: "border-line",
+        ring: "ring-line",
+        text: "text-muted",
+      };
+}
 
 export const PROGRAMS_BY_DEPARTMENT: Record<Department, string[]> = {
   CSD: ["BSIT", "BSCS", "BSIS"],
@@ -27,6 +95,7 @@ export const PROGRAMS_BY_DEPARTMENT: Record<Department, string[]> = {
   NURSING: ["BSN"],
   TECHNOLOGY: ["BSIndTech", "BTVTE"],
   EDUCATION: ["BEEd", "BSEd", "BPEd"],
+  ENTREPRENEURSHIP: ["BS Entrepreneurship"],
 };
 
 export const YEAR_LEVELS: YearLevel[] = [

@@ -8,11 +8,12 @@ import { toast } from "sonner";
 import {
   DEPARTMENTS,
   DEPARTMENT_LABELS,
+  departmentAccent,
+  MAX_PHOTO_BYTES,
   PROGRAMS_BY_DEPARTMENT,
   YEAR_LEVELS,
 } from "@/lib/constants";
 import type { Department, Profile } from "@/types/db";
-import { MAX_PHOTO_BYTES } from "@/lib/constants";
 
 interface CloudinarySignature {
   driver: "cloudinary";
@@ -91,6 +92,7 @@ export function ProfileForm({
   const [department, setDepartment] = useState<Department>(
     profile.department ?? "CSD",
   );
+  const profileAccent = departmentAccent(department);
   const [form, setForm] = useState({
     name: profile.name,
     yearLevel: (profile.year_level ?? "1st year") as string,
@@ -166,7 +168,7 @@ export function ProfileForm({
   return (
     <form onSubmit={submit} className="card space-y-4 p-4 sm:p-6">
       <div className="flex flex-wrap items-center gap-4 rounded-2xl bg-brand-50/60 p-4">
-        <div className="relative grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-full border-2 border-white bg-brand-100 text-brand-700 shadow-sm">
+        <div className={`relative grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-full border-2 bg-brand-100 text-brand-700 shadow-sm ${profileAccent.avatar}`}>
           {avatarUrl ? (
             <Image src={avatarUrl} alt="Your profile photo" fill sizes="80px" className="object-cover" />
           ) : (

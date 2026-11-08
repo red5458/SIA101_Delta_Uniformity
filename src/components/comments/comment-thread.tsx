@@ -6,13 +6,16 @@ import { useRouter } from "next/navigation";
 import { ChevronDown, ChevronUp, Loader2, MessageSquare, Reply, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn, formatRelative, initials } from "@/lib/utils";
-import type { Comment } from "@/types/db";
+import type { Comment, Department } from "@/types/db";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { departmentAccent } from "@/lib/constants";
 
 interface Props {
   listingId: string;
   sellerId: string;
   currentUserId: string;
+  currentUserDepartment: Department | null;
+  currentUserAvatarUrl: string | null;
   isAdmin: boolean;
   initialComments: Comment[];
 }
@@ -26,6 +29,8 @@ interface CommentNodeProps {
   depth: number;
   sellerId: string;
   currentUserId: string;
+  currentUserDepartment: Department | null;
+  currentUserAvatarUrl: string | null;
   isAdmin: boolean;
   replyTo: string | null;
   replyText: string;
@@ -59,6 +64,8 @@ function CommentNode({
   depth,
   sellerId,
   currentUserId,
+  currentUserDepartment,
+  currentUserAvatarUrl,
   isAdmin,
   replyTo,
   replyText,
@@ -72,6 +79,7 @@ function CommentNode({
 }: CommentNodeProps) {
   const isSeller = node.user_id === sellerId;
   const canDelete = node.user_id === currentUserId || isAdmin;
+  const authorAccent = departmentAccent(node.author?.department);
 
   return (
     <div className={cn(depth > 0 && "ml-4 border-l border-line pl-3 sm:ml-6")}>
@@ -83,7 +91,7 @@ function CommentNode({
       >
         <div className="flex items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2">
-            <span className="relative grid h-7 w-7 shrink-0 place-items-center overflow-hidden rounded-full bg-brand-700 text-[10px] font-bold text-white">
+            <span className={`relative grid h-7 w-7 shrink-0 place-items-center overflow-hidden rounded-full border-2 bg-brand-700 text-[10px] font-bold text-white ${authorAccent.avatar}`}>
               {node.author?.avatar_url ? (
                 <Image src={node.author.avatar_url} alt="" fill sizes="28px" className="object-cover" />
               ) : (
@@ -176,6 +184,8 @@ function CommentNode({
                   depth={depth + 1}
                   sellerId={sellerId}
                   currentUserId={currentUserId}
+                  currentUserDepartment={currentUserDepartment}
+                  currentUserAvatarUrl={currentUserAvatarUrl}
                   isAdmin={isAdmin}
                   replyTo={replyTo}
                   replyText={replyText}
@@ -200,6 +210,8 @@ export function CommentThread({
   listingId,
   sellerId,
   currentUserId,
+  currentUserDepartment,
+  currentUserAvatarUrl,
   isAdmin,
   initialComments,
 }: Props) {
@@ -254,6 +266,8 @@ export function CommentThread({
             name: "You",
             program: null,
             year_level: null,
+            department: currentUserDepartment,
+            avatar_url: currentUserAvatarUrl,
           },
         },
       ]);
@@ -331,6 +345,8 @@ export function CommentThread({
               depth={0}
               sellerId={sellerId}
               currentUserId={currentUserId}
+              currentUserDepartment={currentUserDepartment}
+              currentUserAvatarUrl={currentUserAvatarUrl}
               isAdmin={isAdmin}
               replyTo={replyTo}
               replyText={replyText}

@@ -29,11 +29,13 @@ export function LoginForm() {
 
       if (payload.data?.requiresVerification) {
         toast.info("Verify your email to continue");
+        window.dispatchEvent(new CustomEvent("uniformity:route-transition"));
         router.push(`/verify-email?email=${encodeURIComponent(payload.data.email)}`);
         return;
       }
 
       toast.success("Welcome back");
+      window.dispatchEvent(new CustomEvent("uniformity:route-transition"));
       router.push(payload.data?.redirect ?? "/browse");
       router.refresh();
     } catch (error) {

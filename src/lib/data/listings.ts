@@ -17,7 +17,11 @@ export function getCategories(): Promise<Category[]> {
 export function getFeed(filters: FeedFilters = {}): Promise<FeedResult> {
   const query = new URLSearchParams();
 
-  if (filters.department) query.set("department", filters.department);
+  if (Array.isArray(filters.department)) {
+    filters.department.forEach((department) => query.append("department", department));
+  } else if (filters.department) {
+    query.set("department", filters.department);
+  }
   if (filters.category) query.set("category", filters.category);
   if (filters.itemType) query.set("item_type", filters.itemType);
   if (filters.size) query.set("size", filters.size);
@@ -32,6 +36,10 @@ export function getFeed(filters: FeedFilters = {}): Promise<FeedResult> {
 
   const search = query.toString();
   return apiFetch<FeedResult>(`/listings${search ? `?${search}` : ""}`);
+}
+
+export function getPublicPreviewListings(): Promise<Listing[]> {
+  return apiFetch<Listing[]>("/listings/public-preview");
 }
 
 export function getListingById(id: string): Promise<Listing | null> {

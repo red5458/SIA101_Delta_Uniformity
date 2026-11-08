@@ -5,7 +5,10 @@ import { BrandLogo } from "@/components/layout/brand-logo";
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="grid min-h-dvh lg:grid-cols-[1.1fr_1fr]">
-      <aside className="relative hidden overflow-hidden bg-brand-800 p-10 text-white lg:flex lg:flex-col lg:justify-between">
+      <aside
+        className="relative hidden overflow-hidden bg-brand-800 p-10 text-white lg:flex lg:flex-col lg:justify-between"
+        style={{ background: "linear-gradient(90deg, #235823 0%, #235823 80%, #f7faf4 100%)" }}
+      >
         <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-gold-400/20 blur-2xl" />
         <div className="absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-brand-500/30 blur-3xl" />
 
@@ -49,8 +52,12 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </p>
       </aside>
 
-      <main className="flex items-center justify-center bg-cream px-4 py-10 sm:px-8">
-        <div className="w-full max-w-md">
+      <main className="relative isolate flex items-center justify-center overflow-hidden bg-cream px-4 py-10 sm:px-8">
+        <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-sky-400/10 blur-3xl" />
+        <div aria-hidden="true" className="pointer-events-none absolute -bottom-28 -left-24 h-80 w-80 rounded-full bg-orange-400/10 blur-3xl" />
+        <div aria-hidden="true" className="pointer-events-none absolute left-[12%] top-[18%] h-28 w-28 rotate-12 rounded-[2rem] border border-sky-300/20 bg-sky-200/10 blur-[1px] sm:left-[18%]" />
+        <div aria-hidden="true" className="pointer-events-none absolute bottom-[16%] right-[12%] h-20 w-20 rounded-full border border-orange-300/25 bg-orange-200/10 sm:right-[18%]" />
+        <div className="relative z-10 w-full max-w-md">
           <Link href="/" className="mb-8 flex flex-col items-center gap-2 text-center lg:hidden">
             <BrandLogo className="h-14 w-14" />
             <span className="font-display text-xl font-bold text-brand-900">

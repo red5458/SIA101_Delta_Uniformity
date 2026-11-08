@@ -10,10 +10,14 @@ import {
   feedHandler,
   listingDetailHandler,
   myListingsHandler,
+  publicPreviewHandler,
   updateListingHandler,
 } from "./listings.controller";
 
 export const listingsRouter = Router();
+
+// Public landing-page previews expose listing and seller-card fields only; contact details stay private.
+listingsRouter.get("/public-preview", asyncHandler(publicPreviewHandler));
 
 listingsRouter.use(authenticate);
 

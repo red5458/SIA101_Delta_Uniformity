@@ -10,6 +10,18 @@
 
   html {
     -webkit-text-size-adjust: 100%;
+    overscroll-behavior-y: none;
+  }
+
+  a,
+  button:not(:disabled) {
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity 140ms ease;
+  }
+
+  a:active,
+  button:not(:disabled):active {
+    opacity: 0.78;
   }
 
   /* Keep Edge's native password reveal control from duplicating our custom eye button. */
@@ -20,10 +32,29 @@
 
   body {
     @apply bg-cream text-ink antialiased;
+    overscroll-behavior-y: none;
   }
 
   ::selection {
     @apply bg-gold-200 text-brand-900;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  a,
+  button:not(:disabled) {
+    transition: none !important;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hidden {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none;
   }
 }
 

@@ -1,8 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { MapPin } from "lucide-react";
 import type { Listing } from "@/types/db";
 import { formatPrice, formatRelative, initials } from "@/lib/utils";
+import { DEPARTMENT_LABELS, DEPARTMENT_SHORT_LABELS, departmentAccent } from "@/lib/constants";
 import { WishlistButton } from "@/components/listings/wishlist-button";
 
 export function ListingCard({
@@ -15,9 +18,10 @@ export function ListingCard({
   const photo = [...(listing.photos ?? [])].sort(
     (a, b) => a.position - b.position,
   )[0];
+  const listingAccent = departmentAccent(listing.department);
 
   return (
-    <article className="card overflow-hidden">
+    <article className="card flex h-full flex-col overflow-hidden">
       <div className="relative aspect-[4/3] overflow-hidden bg-brand-50">
         <Link href={`/listings/${listing.listing_id}`} className="block h-full">
           {photo ? (
@@ -35,17 +39,6 @@ export function ListingCard({
           )}
         </Link>
 
-        <div className="absolute left-2.5 right-12 top-2.5 flex flex-wrap gap-1.5">
-          <span className="badge border-white/40 bg-white/90 text-[11px] text-ink">
-            {listing.condition}
-          </span>
-          {listing.size !== "N/A" && (
-            <span className="badge border-white/40 bg-brand-700/90 text-[11px] text-white">
-              Size {listing.size}
-            </span>
-          )}
-        </div>
-
         <div className="absolute right-2.5 top-2.5">
           <WishlistButton
             listingId={listing.listing_id}
@@ -61,7 +54,7 @@ export function ListingCard({
         )}
       </div>
 
-      <div className="p-3.5">
+      <div className="flex flex-1 flex-col p-3.5">
         <div className="flex items-start justify-between gap-2">
           <Link
             href={`/listings/${listing.listing_id}`}
@@ -74,9 +67,14 @@ export function ListingCard({
           </span>
         </div>
 
-        <div className="mt-2 flex items-center gap-1.5 text-xs text-muted">
-          <MapPin className="h-3.5 w-3.5" />
-          <span>{listing.department}</span>
+        <div className="mt-auto flex items-center gap-1.5 pt-2 text-xs text-muted">
+          <MapPin className={`h-3.5 w-3.5 shrink-0 ${listingAccent.text}`} />
+          <span className={`min-w-0 truncate font-medium sm:hidden ${listingAccent.text}`}>
+            {DEPARTMENT_SHORT_LABELS[listing.department]}
+          </span>
+          <span className={`hidden min-w-0 truncate font-medium sm:inline ${listingAccent.text}`}>
+            {DEPARTMENT_LABELS[listing.department]}
+          </span>
           <span aria-hidden>·</span>
           <span className="sm:hidden">
             {formatRelative(listing.created_at).replace(/ ago$/, "")}

@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { cn, initials } from "@/lib/utils";
 import type { Profile } from "@/types/db";
 import { BrandLogo } from "@/components/layout/brand-logo";
+import { departmentAccent } from "@/lib/constants";
 
 const NAV = [
   { href: "/browse", label: "Browse", icon: Store },
@@ -32,6 +33,7 @@ export function Header({ profile }: { profile: Profile }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
+  const profileAccent = departmentAccent(profile.department);
 
   async function signOut() {
     try {
@@ -95,7 +97,7 @@ export function Header({ profile }: { profile: Profile }) {
             href="/profile"
             className="flex items-center gap-2 rounded-full border border-line bg-white px-2 py-1.5 transition hover:border-brand-200"
           >
-            <span className="relative grid h-7 w-7 place-items-center overflow-hidden rounded-full bg-brand-700 text-xs font-bold text-white">
+            <span className={`relative grid h-7 w-7 place-items-center overflow-hidden rounded-full border-2 bg-brand-700 text-xs font-bold text-white ${profileAccent.avatar}`}>
               {profile.avatar_url ? (
                 <Image src={profile.avatar_url} alt="" fill sizes="28px" className="object-cover" />
               ) : (

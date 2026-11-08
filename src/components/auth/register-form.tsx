@@ -52,6 +52,7 @@ export function RegisterForm() {
         throw new Error(payload?.error?.message ?? "Registration failed");
       }
       toast.success("Check your inbox for the 6-digit code");
+      window.dispatchEvent(new CustomEvent("uniformity:route-transition"));
       router.push(`/verify-email?email=${encodeURIComponent(form.email.trim().toLowerCase())}`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Registration failed");

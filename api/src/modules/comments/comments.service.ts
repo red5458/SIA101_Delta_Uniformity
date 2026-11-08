@@ -20,6 +20,7 @@ export async function getComments(listingId: string): Promise<CommentRow[]> {
          'name', u.name,
          'program', u.program,
          'year_level', u.year_level,
+         'department', u.department,
          'avatar_url', u.avatar_url
        ) AS author
      FROM comments c

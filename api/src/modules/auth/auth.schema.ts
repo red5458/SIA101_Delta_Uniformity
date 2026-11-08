@@ -8,6 +8,7 @@ export const DEPARTMENTS = [
   "NURSING",
   "TECHNOLOGY",
   "EDUCATION",
+  "ENTREPRENEURSHIP",
 ] as const;
 
 export const YEAR_LEVELS = [

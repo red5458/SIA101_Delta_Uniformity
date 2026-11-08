@@ -63,7 +63,7 @@ export const listingUpdateSchema = listingSchema.partial().extend({
 });
 
 export const feedQuerySchema = z.object({
-  department: z.enum(DEPARTMENTS).optional(),
+  department: z.union([z.enum(DEPARTMENTS), z.array(z.enum(DEPARTMENTS))]).optional(),
   category: z.string().uuid().optional(),
   item_type: z.enum(ITEM_TYPES).optional(),
   size: z.enum(SIZES).optional(),

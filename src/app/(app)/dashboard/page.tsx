@@ -6,6 +6,7 @@ import { StatusToggle } from "@/components/listings/status-toggle";
 import { requireVerifiedUser } from "@/lib/auth/session";
 import { getSellerListings } from "@/lib/data/listings";
 import { formatPrice, formatRelative } from "@/lib/utils";
+import { DEPARTMENT_LABELS, departmentAccent } from "@/lib/constants";
 
 export const metadata = { title: "My listings | Uniformity" };
 
@@ -68,6 +69,7 @@ export default async function DashboardPage() {
             const photo = [...(listing.photos ?? [])].sort(
               (a, b) => a.position - b.position,
             )[0];
+            const listingAccent = departmentAccent(listing.department);
 
             return (
               <article
@@ -110,6 +112,10 @@ export default async function DashboardPage() {
                       }
                     >
                       {listing.status}
+                    </span>
+                    <span className={`badge ${listingAccent.badge}`}>
+                      <span aria-hidden className={`h-1.5 w-1.5 rounded-full ${listingAccent.dot}`} />
+                      {DEPARTMENT_LABELS[listing.department]}
                     </span>
                   </div>
                   <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted">

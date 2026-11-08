@@ -5,6 +5,7 @@ const config: Config = {
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/lib/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {
@@ -61,11 +62,17 @@ const config: Config = {
           "0%": { opacity: "0", transform: "translateY(-8px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        float: {
+          "0%, 100%": { transform: "translateY(0px)" },
+          "50%": { transform: "translateY(-7px)" },
+        },
       },
       animation: {
         "fade-up": "fade-up 0.35s ease-out both",
         "fade-in": "fade-in 0.16s ease-out both",
+        "fade-in-slow": "fade-in 0.36s ease-out both",
         "menu-drop": "menu-drop 0.2s ease-out both",
+        float: "float 5.2s ease-in-out infinite",
       },
     },
   },

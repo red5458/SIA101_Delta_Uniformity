@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Poppins } from "next/font/google";
 import { CheckCircle2, CircleAlert, Info, TriangleAlert, X } from "lucide-react";
 import { Toaster } from "sonner";
+import { NavigationTransition } from "@/components/layout/navigation-transition";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -29,7 +31,9 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
       </head>
       <body>
-        {children}
+        <Suspense fallback={children}>
+          <NavigationTransition>{children}</NavigationTransition>
+        </Suspense>
         <Toaster
           theme="light"
           position="top-center"

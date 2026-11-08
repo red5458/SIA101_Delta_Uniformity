@@ -11,6 +11,7 @@ import type {
   ListingCondition,
   ListingSize,
 } from "@/types/db";
+import { DEPARTMENTS } from "@/lib/constants";
 
 export const metadata = { title: "Browse | Uniformity" };
 
@@ -26,11 +27,22 @@ function numberOrUndefined(value: string | undefined) {
   return Number.isFinite(num) ? num : undefined;
 }
 
+function departments(value: string | string[] | undefined): Department[] {
+  const values = Array.isArray(value) ? value : value ? [value] : [];
+  return values.filter((item): item is Department =>
+    DEPARTMENTS.includes(item as Department),
+  );
+}
+
 function pageHref(params: SearchParams, page: number) {
   const query = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
-    const item = single(value);
-    if (item && key !== "page") query.set(key, item);
+    if (key === "page") return;
+    if (Array.isArray(value)) {
+      value.forEach((item) => query.append(key, item));
+    } else if (value) {
+      query.set(key, value);
+    }
   });
   if (page > 1) query.set("page", String(page));
   const queryString = query.toString();
@@ -44,9 +56,10 @@ export default async function BrowsePage({
 }) {
   const params = await searchParams;
   await requireVerifiedUser();
+  const selectedDepartments = departments(params.department);
 
   const filters: FeedFilters = {
-    department: (single(params.department) as Department) || undefined,
+    department: selectedDepartments.length ? selectedDepartments : undefined,
     category: single(params.category),
     itemType: (single(params.item_type) as ItemType) || undefined,
     size: (single(params.size) as ListingSize) || undefined,
@@ -82,9 +95,9 @@ export default async function BrowsePage({
 
       <FiltersBar
         categories={categories}
+        departments={selectedDepartments}
         current={{
           q: single(params.q),
-          department: single(params.department),
           category: single(params.category),
           item_type: single(params.item_type),
           size: single(params.size),
@@ -95,6 +108,7 @@ export default async function BrowsePage({
         }}
       />
 
+      <div>
       {feed.listings.length === 0 ? (
         <div className="card grid place-items-center px-4 py-16 text-center">
           <span className="grid h-12 w-12 place-items-center rounded-2xl bg-brand-50 text-brand-600">
@@ -131,6 +145,7 @@ export default async function BrowsePage({
           ))}
         </div>
       )}
+      </div>
 
       {feed.pageCount > 1 && (
         <nav className="mt-6 flex items-center justify-center gap-2" aria-label="Pagination">

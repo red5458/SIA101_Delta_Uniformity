@@ -3,7 +3,8 @@ export type Department =
   | "ENGINEERING"
   | "NURSING"
   | "TECHNOLOGY"
-  | "EDUCATION";
+  | "EDUCATION"
+  | "ENTREPRENEURSHIP";
 
 export type YearLevel = "1st year" | "2nd year" | "3rd year" | "4th year";
 
@@ -113,6 +114,8 @@ export interface CommentRow {
     name: string;
     program: string | null;
     year_level: YearLevel | null;
+    department: Department | null;
+    avatar_url: string | null;
   } | null;
 }
 
@@ -125,7 +128,7 @@ export interface AdminStats {
 }
 
 export interface FeedFilters {
-  department?: Department;
+  department?: Department | Department[];
   category?: string;
   itemType?: ItemType;
   size?: ListingSize;

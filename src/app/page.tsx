@@ -1,16 +1,22 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   BadgeCheck,
   Bookmark,
   Camera,
   HandCoins,
   MessagesSquare,
+  MapPin,
+  PackageOpen,
   Search,
   ShieldCheck,
   Store,
 } from "lucide-react";
 import { getSession } from "@/lib/auth/session";
 import { BrandLogo } from "@/components/layout/brand-logo";
+import { getPublicPreviewListings } from "@/lib/data/listings";
+import { DEPARTMENT_LABELS, departmentAccent } from "@/lib/constants";
+import { formatPrice } from "@/lib/utils";
 
 const FEATURES = [
   {
@@ -46,7 +52,10 @@ const FEATURES = [
 ];
 
 export default async function LandingPage() {
-  const session = await getSession();
+  const [session, previewListings] = await Promise.all([
+    getSession(),
+    getPublicPreviewListings().catch(() => []),
+  ]);
   const signedIn = Boolean(session.authUser && session.profile?.is_verified);
 
   return (
@@ -122,37 +131,73 @@ export default async function LandingPage() {
             </div>
           </div>
 
-          <div className="relative mx-auto w-full max-w-sm animate-fade-up">
-            <div className="card overflow-hidden">
-              <div className="relative aspect-[4/3] bg-gradient-to-br from-brand-700 via-brand-600 to-brand-500">
-                <div className="absolute inset-0 grid place-items-center">
-                  <div className="rounded-2xl bg-white/10 px-6 py-4 text-center backdrop-blur">
-                    <p className="text-xs font-semibold uppercase tracking-widest text-gold-200">
-                      Sample listing
-                    </p>
-                    <p className="mt-1 font-display text-2xl font-bold text-white">
-                      CSD Department Shirt
-                    </p>
-                    <p className="mt-1 text-sm text-white/80">Size M · Like New</p>
-                  </div>
-                </div>
-                <span className="badge absolute left-3 top-3 border-white/40 bg-white/90 text-ink">
-                  Size M
-                </span>
+          <div className="relative mx-auto w-full max-w-xl animate-fade-up">
+            {previewListings.length > 0 ? (
+              <div className="grid grid-cols-2 gap-3 sm:gap-5">
+                {previewListings.map((listing, index) => {
+                  const photo = [...(listing.photos ?? [])].sort(
+                    (a, b) => a.position - b.position,
+                  )[0];
+                  const accent = departmentAccent(listing.department);
+                  const scatter = [
+                    "-rotate-2 sm:translate-y-2",
+                    "rotate-2 sm:-translate-y-3",
+                    "rotate-1 sm:translate-y-1",
+                    "-rotate-2 sm:-translate-y-1",
+                  ][index % 4];
+                  return (
+                    <div
+                      key={listing.listing_id}
+                      className="motion-safe:animate-float"
+                      style={{ animationDelay: `${index * -0.85}s` }}
+                    >
+                    <Link
+                      href={signedIn ? `/listings/${listing.listing_id}` : "/login"}
+                      className={`card group block overflow-hidden transition-transform duration-200 hover:-translate-y-1 ${scatter}`}
+                    >
+                      <div className="relative aspect-[4/3] overflow-hidden bg-brand-50">
+                        {photo ? (
+                          <Image
+                            src={photo.image_url}
+                            alt={listing.title}
+                            fill
+                            sizes="(max-width: 640px) 45vw, 260px"
+                            className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                          />
+                        ) : (
+                          <div className="grid h-full place-items-center text-brand-300">
+                            <PackageOpen className="h-8 w-8" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex min-h-[6.5rem] flex-col p-3">
+                        <p className="h-10 line-clamp-2 break-words text-xs font-semibold leading-5 text-ink sm:text-sm">
+                          {listing.title}
+                        </p>
+                        <span className="mt-1 text-xs font-bold text-brand-800 sm:text-sm">
+                          {formatPrice(listing.price)}
+                        </span>
+                        <p className={`mt-2 flex items-center gap-1 truncate text-[10px] font-medium sm:text-xs ${accent.text}`}>
+                          <MapPin className="h-3 w-3 shrink-0" />
+                          {DEPARTMENT_LABELS[listing.department]}
+                        </p>
+                      </div>
+                    </Link>
+                    </div>
+                  );
+                })}
               </div>
-              <div className="p-4">
-                <div className="flex items-center justify-between">
-                  <p className="font-semibold text-ink">CSD Department Shirt</p>
-                  <p className="font-bold text-brand-800">₱250</p>
-                </div>
-                <div className="mt-3 flex items-center gap-2 border-t border-line pt-3 text-xs text-muted">
-                  <BadgeCheck className="h-4 w-4 text-brand-600" />
-                  Verified seller · BSIT · 4th year
+            ) : (
+              <div className="card grid min-h-64 place-items-center p-8 text-center">
+                <div>
+                  <PackageOpen className="mx-auto h-9 w-9 text-brand-300" />
+                  <p className="mt-3 font-semibold text-ink">Campus listings</p>
+                  <p className="mt-1 text-sm text-muted">New student listings will appear here.</p>
                 </div>
               </div>
-            </div>
+            )}
             <div className="absolute -bottom-4 -left-4 hidden rounded-xl border border-line bg-white px-3 py-2 text-xs font-medium shadow-card sm:block">
-              Meet at the library steps 🏫
+              Real finds from BU students 🏫
             </div>
           </div>
         </div>

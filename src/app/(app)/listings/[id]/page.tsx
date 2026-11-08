@@ -15,7 +15,7 @@ import { SellerCard } from "@/components/sellers/seller-card";
 import { requireVerifiedUser } from "@/lib/auth/session";
 import { getComments, isWishlisted } from "@/lib/data/comments";
 import { getListingById } from "@/lib/data/listings";
-import { DEPARTMENT_LABELS } from "@/lib/constants";
+import { DEPARTMENT_LABELS, departmentAccent } from "@/lib/constants";
 import { formatDate, formatPrice } from "@/lib/utils";
 
 export default async function ListingDetailPage({
@@ -34,13 +34,14 @@ export default async function ListingDetailPage({
   if (!listing) notFound();
 
   const isOwner = listing.seller_id === session.authUser.id;
+  const listingAccent = departmentAccent(listing.department);
   const photos = [...(listing.photos ?? [])].sort(
     (a, b) => a.position - b.position,
   );
 
   return (
     <div>
-      <Link href="/browse" className="btn-ghost mb-3 -ml-2 text-sm">
+      <Link href="/browse" className="btn-ghost mb-3 -ml-2 text-sm transition-transform active:scale-[0.97] active:bg-brand-50">
         <ArrowLeft className="h-4 w-4" />
         Back to browse
       </Link>
@@ -53,6 +54,10 @@ export default async function ListingDetailPage({
         <div className="space-y-4">
           <div className="card p-4 sm:p-5">
             <div className="flex flex-wrap items-center gap-1.5">
+              <span className={`badge ${listingAccent.badge}`}>
+                <span aria-hidden className={`h-1.5 w-1.5 rounded-full ${listingAccent.dot}`} />
+                {DEPARTMENT_LABELS[listing.department]}
+              </span>
               <span className="badge border-brand-200 bg-brand-50 text-brand-800">
                 {listing.item_type}
               </span>
@@ -135,6 +140,8 @@ export default async function ListingDetailPage({
           listingId={listing.listing_id}
           sellerId={listing.seller_id}
           currentUserId={session.authUser.id}
+          currentUserDepartment={session.profile.department}
+          currentUserAvatarUrl={session.profile.avatar_url}
           isAdmin={Boolean(session.profile.is_admin)}
           initialComments={comments}
         />

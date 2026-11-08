@@ -10,9 +10,11 @@ export default async function AppLayout({
   const session = await requireVerifiedUser();
 
   return (
-    <div className="min-h-dvh bg-cream">
+    <div className="min-h-svh bg-cream">
       <Header profile={session.profile} />
-      <main className="container-page pb-24 pt-5 md:pb-10">{children}</main>
+      <main className="container-page relative pb-24 pt-5 md:pb-10">
+        {children}
+      </main>
       <MobileNav />
     </div>
   );

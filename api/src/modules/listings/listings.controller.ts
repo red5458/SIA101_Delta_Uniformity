@@ -7,6 +7,7 @@ import {
   getCategories,
   getFeed,
   getListingById,
+  getPublicPreviewListings,
   getSellerListings,
   updateListing,
 } from "./listings.service";
@@ -21,12 +22,22 @@ export async function categoriesHandler(_req: Request, res: Response) {
   return ok(res, await getCategories());
 }
 
+export async function publicPreviewHandler(_req: Request, res: Response) {
+  return ok(res, await getPublicPreviewListings());
+}
+
 export async function feedHandler(req: Request, res: Response) {
-  const cleaned = Object.fromEntries(
-    Object.entries(req.query).filter(
-      ([, value]) => typeof value === "string" && value.trim() !== "",
-    ),
-  ) as Record<string, string>;
+  const cleaned: Record<string, unknown> = {};
+  Object.entries(req.query).forEach(([key, value]) => {
+    if (key === "department" && Array.isArray(value)) {
+      const departments = value.filter(
+        (item): item is string => typeof item === "string" && item.trim() !== "",
+      );
+      if (departments.length) cleaned[key] = departments;
+    } else if (typeof value === "string" && value.trim() !== "") {
+      cleaned[key] = value;
+    }
+  });
 
   const params = feedQuerySchema.parse(cleaned);
 

@@ -70,6 +70,52 @@ const LISTING_SELECT = `
   ) p ON TRUE
 `;
 
+const PUBLIC_PREVIEW_SELECT = `
+  SELECT
+    l.listing_id,
+    l.seller_id,
+    l.category_id,
+    l.title,
+    l.item_type,
+    l.description,
+    l.price::float8 AS price,
+    l.condition,
+    l.size,
+    l.measurements,
+    l.department,
+    l.status,
+    l.created_at,
+    l.updated_at,
+    json_build_object('name', c.name, 'slug', c.slug) AS category,
+    COALESCE(p.photos, '[]'::json) AS photos,
+    json_build_object(
+      'user_id', u.user_id,
+      'name', u.name,
+      'program', u.program,
+      'year_level', u.year_level,
+      'department', u.department,
+      'avatar_url', u.avatar_url,
+      'is_verified', u.is_verified
+    ) AS seller
+  FROM listings l
+  JOIN categories c ON c.category_id = l.category_id
+  JOIN users u ON u.user_id = l.seller_id
+  LEFT JOIN LATERAL (
+    SELECT json_agg(
+             json_build_object(
+               'photo_id', lp.photo_id,
+               'listing_id', lp.listing_id,
+               'image_url', lp.image_url,
+               'cloudinary_id', lp.cloudinary_id,
+               'position', lp.position
+             )
+             ORDER BY lp.position
+           ) AS photos
+      FROM listing_photos lp
+     WHERE lp.listing_id = l.listing_id
+  ) p ON TRUE
+`;
+
 export function mapListing(row: RawListing): Listing {
   return {
     ...row,
@@ -98,7 +144,15 @@ function buildFilters(filters: FeedFilters) {
     return `$${params.length}`;
   };
 
-  if (filters.department) conditions.push(`l.department = ${param(filters.department)}`);
+  if (Array.isArray(filters.department)) {
+    if (filters.department.length === 1) {
+      conditions.push(`l.department = ${param(filters.department[0])}`);
+    } else if (filters.department.length > 1) {
+      conditions.push(`l.department = ANY(${param(filters.department)}::text[])`);
+    }
+  } else if (filters.department) {
+    conditions.push(`l.department = ${param(filters.department)}`);
+  }
   if (filters.category) conditions.push(`l.category_id = ${param(filters.category)}`);
   if (filters.itemType) conditions.push(`l.item_type = ${param(filters.itemType)}`);
   if (filters.size) conditions.push(`l.size = ${param(filters.size)}`);
@@ -153,6 +207,34 @@ export async function getFeed(filters: FeedFilters = {}) {
     page,
     pageCount: Math.max(1, Math.ceil(total / PAGE_SIZE)),
   };
+}
+
+export async function getPublicPreviewListings(): Promise<Listing[]> {
+  const { rows } = await query<RawListing>(
+    `${PUBLIC_PREVIEW_SELECT}
+      WHERE l.status = 'Active' AND u.is_suspended = false
+      ORDER BY l.created_at DESC
+      LIMIT 60`,
+  );
+
+  const listings = rows.map(mapListing);
+  const featured: Listing[] = [];
+  const seenDepartments = new Set<string>();
+
+  for (const listing of listings) {
+    if (seenDepartments.has(listing.department)) continue;
+    featured.push(listing);
+    seenDepartments.add(listing.department);
+    if (featured.length === 4) return featured;
+  }
+
+  for (const listing of listings) {
+    if (featured.some((item) => item.listing_id === listing.listing_id)) continue;
+    featured.push(listing);
+    if (featured.length === 4) break;
+  }
+
+  return featured;
 }
 
 export async function getListingById(

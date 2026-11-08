@@ -1,7 +1,7 @@
 import { BadgeCheck, GraduationCap, Mail, MessageCircle, Phone } from "lucide-react";
 import Image from "next/image";
 import { initials } from "@/lib/utils";
-import { DEPARTMENT_LABELS } from "@/lib/constants";
+import { DEPARTMENT_LABELS, departmentAccent } from "@/lib/constants";
 import type { SellerSummary } from "@/types/db";
 
 function messengerHref(value: string) {
@@ -19,12 +19,14 @@ export function SellerCard({ seller }: { seller: SellerSummary | null }) {
     );
   }
 
+  const sellerAccent = departmentAccent(seller.department);
+
   return (
     <section className="card overflow-hidden" aria-label="Verified seller profile">
       <div className="h-16 bg-gradient-to-r from-brand-800 via-brand-700 to-brand-600" />
       <div className="-mt-8 px-4 pb-4">
         <div className="flex items-end justify-between gap-3">
-          <span className="relative grid h-16 w-16 place-items-center overflow-hidden rounded-2xl border-4 border-white bg-gold-300 text-xl font-black text-brand-900 shadow-sm">
+          <span className={`relative grid h-16 w-16 place-items-center overflow-hidden rounded-2xl border-4 border-white bg-gold-300 text-xl font-black text-brand-900 shadow-sm ring-2 ring-offset-1 ring-offset-white ${sellerAccent.ring}`}>
             {seller.avatar_url ? (
               <Image src={seller.avatar_url} alt={`${seller.name}'s profile photo`} fill sizes="64px" className="object-cover" />
             ) : (
