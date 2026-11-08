@@ -8,6 +8,7 @@ import type {
   SellerSummary,
 } from "../../types";
 import { badRequest, forbidden, notFound } from "../../utils/ApiError";
+import { createNotification } from "../notifications/notifications.service";
 import { destroyStoredAssets } from "./media.service";
 import type { ListingInput, ListingUpdateInput } from "./listings.schema";
 
@@ -449,6 +450,18 @@ export async function deleteListing(
   await destroyStoredAssets(
     existing.photos.map((photo) => photo.cloudinary_id),
   );
+
+  // Sellers deleting their own listing do not need to be told about it.
+  if (user.isAdmin && existing.seller_id !== user.userId) {
+    await createNotification({
+      userId: existing.seller_id,
+      type: "listing_removed",
+      title: "Your listing was removed",
+      body: `An administrator removed "${existing.title}".`,
+      linkUrl: "/dashboard",
+      actorId: user.userId,
+    });
+  }
 
   return { deleted: true };
 }

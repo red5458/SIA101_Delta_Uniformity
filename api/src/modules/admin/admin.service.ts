@@ -2,6 +2,7 @@ import { query } from "../../config/db";
 import type { AdminStats, UserRow } from "../../types";
 import { badRequest, notFound } from "../../utils/ApiError";
 import { revokeAllSessions } from "../auth/auth.tokens";
+import { createNotification } from "../notifications/notifications.service";
 
 export interface AdminListingRow {
   listing_id: string;
@@ -166,6 +167,19 @@ export async function setUserSuspension(
   if (suspended) {
     await revokeAllSessions(target.user_id);
   }
+
+  await createNotification({
+    userId: target.user_id,
+    type: suspended ? "suspended" : "reinstated",
+    title: suspended
+      ? "Your account is suspended"
+      : "Your account is reinstated",
+    body: suspended
+      ? "An administrator suspended your account. You cannot post or comment until it is restored."
+      : "An administrator restored your account. You can buy and sell again.",
+    linkUrl: suspended ? "/suspended" : "/browse",
+    actorId: admin.user_id,
+  });
 
   return { suspended: target.is_suspended };
 }

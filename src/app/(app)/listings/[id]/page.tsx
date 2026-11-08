@@ -135,7 +135,7 @@ export default async function ListingDetailPage({
         </div>
       </div>
 
-      <div className="mt-5">
+      <div id="comments" className="mt-5 scroll-mt-20">
         <CommentThread
           listingId={listing.listing_id}
           sellerId={listing.seller_id}

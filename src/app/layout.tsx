@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { Poppins } from "next/font/google";
 import { CheckCircle2, CircleAlert, Info, TriangleAlert, X } from "lucide-react";
 import { Toaster } from "sonner";
 import { NavigationTransition } from "@/components/layout/navigation-transition";
+import { ServiceWorkerRegistration } from "@/components/pwa/register-sw";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -19,6 +20,28 @@ export const metadata: Metadata = {
   title: "Uniformity | BU Polangui Campus Marketplace",
   description:
     "Buy and sell pre-loved uniforms, department shirts, and course equipment within Bicol University Polangui. Meet on campus, pay in cash.",
+  applicationName: "Uniformity",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: "Uniformity",
+    statusBarStyle: "default",
+  },
+  icons: {
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180" }],
+  },
+  formatDetection: { telephone: false },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#235823",
 };
 
 export default function RootLayout({
@@ -31,6 +54,7 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
       </head>
       <body>
+        <ServiceWorkerRegistration />
         <Suspense fallback={children}>
           <NavigationTransition>{children}</NavigationTransition>
         </Suspense>

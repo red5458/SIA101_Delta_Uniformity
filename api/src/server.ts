@@ -15,6 +15,7 @@ const server = app.listen(env.PORT, () => {
       databaseTls: env.databaseSsl,
       emailMode: env.EMAIL_MODE,
       uploadDriver: env.uploadDriver,
+      pushEnabled: env.pushEnabled,
     },
     `Uniformity API listening on http://localhost:${env.PORT}`,
   );

@@ -109,6 +109,39 @@ export interface Comment {
   } | null;
 }
 
+export type NotificationType =
+  | "comment"
+  | "reply"
+  | "listing_removed"
+  | "comment_removed"
+  | "suspended"
+  | "reinstated";
+
+export interface Notification {
+  notification_id: string;
+  user_id: string;
+  type: NotificationType;
+  title: string;
+  body: string | null;
+  link_url: string | null;
+  listing_id: string | null;
+  comment_id: string | null;
+  actor_id: string | null;
+  read_at: string | null;
+  created_at: string;
+  actor: {
+    user_id: string;
+    name: string;
+    avatar_url: string | null;
+  } | null;
+}
+
+export interface NotificationPage {
+  items: Notification[];
+  nextCursor: string | null;
+  unreadCount: number;
+}
+
 export interface AdminStats {
   total_users: number;
   verified_users: number;

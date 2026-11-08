@@ -11,6 +11,7 @@ import { adminRouter } from "./modules/admin/admin.routes";
 import { authRouter } from "./modules/auth/auth.routes";
 import { commentsRouter } from "./modules/comments/comments.routes";
 import { listingsRouter } from "./modules/listings/listings.routes";
+import { notificationsRouter } from "./modules/notifications/notifications.routes";
 import { profileRouter } from "./modules/profile/profile.routes";
 import { sellersRouter } from "./modules/sellers/sellers.routes";
 import { uploadsRouter } from "./modules/uploads/uploads.routes";
@@ -106,6 +107,7 @@ export function createApp() {
   app.use("/api/sellers", sellersRouter);
   app.use("/api/comments", commentsRouter);
   app.use("/api/wishlist", wishlistRouter);
+  app.use("/api/notifications", notificationsRouter);
   app.use("/api/uploads", uploadsRouter);
   app.use("/api/admin", adminRouter);
 

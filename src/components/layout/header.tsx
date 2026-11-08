@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { cn, initials } from "@/lib/utils";
 import type { Profile } from "@/types/db";
 import { BrandLogo } from "@/components/layout/brand-logo";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { departmentAccent } from "@/lib/constants";
 
 const NAV = [
@@ -28,7 +29,13 @@ const NAV = [
   { href: "/dashboard", label: "My Listings", icon: LayoutDashboard },
 ];
 
-export function Header({ profile }: { profile: Profile }) {
+export function Header({
+  profile,
+  unreadCount = 0,
+}: {
+  profile: Profile;
+  unreadCount?: number;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -93,6 +100,7 @@ export function Header({ profile }: { profile: Profile }) {
         </nav>
 
         <div className="flex items-center gap-2">
+          <NotificationBell initialCount={unreadCount} />
           <Link
             href="/profile"
             className="flex items-center gap-2 rounded-full border border-line bg-white px-2 py-1.5 transition hover:border-brand-200"

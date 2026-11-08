@@ -89,6 +89,11 @@ const envSchema = z.object({
   GMAIL_CLIENT_SECRET: optional,
   GMAIL_REFRESH_TOKEN: optional,
 
+  // Web Push (VAPID). Optional: push delivery is skipped when unset.
+  VAPID_PUBLIC_KEY: optional,
+  VAPID_PRIVATE_KEY: optional,
+  VAPID_SUBJECT: z.string().min(1).default("mailto:no-reply@uniformity.local"),
+
   CLOUDINARY_CLOUD_NAME: optional,
   CLOUDINARY_API_KEY: optional,
   CLOUDINARY_API_SECRET: optional,
@@ -135,6 +140,15 @@ const envSchemaWithRules = envSchema.superRefine((value, ctx) => {
       code: z.ZodIssueCode.custom,
       path: ["SMTP_HOST"],
       message: "Required when EMAIL_MODE=smtp",
+    });
+  }
+
+  // VAPID keys are a pair: half a pair would silently disable push delivery.
+  if (Boolean(value.VAPID_PUBLIC_KEY) !== Boolean(value.VAPID_PRIVATE_KEY)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: [value.VAPID_PUBLIC_KEY ? "VAPID_PRIVATE_KEY" : "VAPID_PUBLIC_KEY"],
+      message: "VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY must be set together",
     });
   }
 });
@@ -237,6 +251,7 @@ export const env = {
   databaseProvider: /supabase\.(co|com)$/.test(databaseHost())
     ? "supabase"
     : "postgres",
+  pushEnabled: Boolean(raw.VAPID_PUBLIC_KEY && raw.VAPID_PRIVATE_KEY),
   // In development the OTP can be returned to make end-to-end testing possible.
   exposeDevOtp:
     raw.EXPOSE_DEV_OTP && raw.NODE_ENV !== "production",

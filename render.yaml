@@ -53,6 +53,14 @@ services:
         sync: false
       - key: EXPOSE_DEV_OTP
         value: "false"
+      # Web Push (VAPID). Generate a pair with `npm --prefix api run push:keys`
+      # and use the same public key for NEXT_PUBLIC_VAPID_PUBLIC_KEY below.
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_SUBJECT
+        value: mailto:admin@bicol-u.edu.ph
 
   # Next.js frontend. Server Components and the /api/* BFF both call the API
   # above over the public internet, so this is a plain Node web service.
@@ -76,3 +84,7 @@ services:
       # Optional: not read by the app today, kept for parity with the docs.
       - key: NEXT_PUBLIC_APP_URL
         value: https://uniformity-web.onrender.com
+      # Public half of the API's VAPID pair. Must be present at build time so it
+      # is inlined into the client bundle; changing it requires a redeploy.
+      - key: NEXT_PUBLIC_VAPID_PUBLIC_KEY
+        sync: false

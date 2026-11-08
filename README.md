@@ -70,6 +70,12 @@ auth design, and layer breakdown.
   **Seller** badge. Authors and admins can delete comments.
 - **Admin panel** — overview stats, listing moderation (with photo cleanup),
   user suspension/reinstatement, and comment removal.
+- **Notifications** — a header bell plus a full `/notifications` page. Students
+  are notified when someone asks about their listing, replies to their question,
+  or when an admin removes a listing/comment or suspends/reinstates them. Web
+  Push delivers the same alerts to an installed app, even when the tab is closed.
+- **Installable PWA** — manifest, generated icons, service worker, and an
+  offline page. Add Uniformity to the Home Screen for a standalone app shell.
 - **Mobile-first UI** — sticky header, bottom tab bar, responsive cards.
 
 ---
@@ -140,6 +146,8 @@ Root `.env.local` (Next.js):
 ```dotenv
 API_URL=http://127.0.0.1:4000
 NEXT_PUBLIC_APP_URL=http://localhost:3000
+# Public half of the API VAPID pair, required only for Web Push.
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=
 ```
 
 `api/.env` (copy from `api/.env.example`):
@@ -214,6 +222,7 @@ Other scripts: `npm run typecheck`, `npm --prefix api run typecheck`,
 | --------------------- | ------------------------------------------------------------- |
 | `API_URL`             | Base URL of the Express API (server-side only)                |
 | `NEXT_PUBLIC_APP_URL` | Public origin of the app, used in metadata                    |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | VAPID public key for Web Push (build-time)          |
 
 ### API
 
@@ -242,6 +251,9 @@ Other scripts: `npm run typecheck`, `npm --prefix api run typecheck`,
 | `GMAIL_CLIENT_SECRET`        | OAuth client secret                                         |
 | `GMAIL_REFRESH_TOKEN`        | Long-lived token with the `gmail.send` scope                 |
 | `MAIL_FROM`, `SMTP_*`        | Sender name and optional SMTP delivery settings             |
+| `VAPID_PUBLIC_KEY`           | Web Push public key (pair with the private key below)       |
+| `VAPID_PRIVATE_KEY`          | Web Push private key; push is disabled when unset           |
+| `VAPID_SUBJECT`              | `mailto:` contact sent to push services                     |
 | `CLOUDINARY_*`               | Cloud name, API key, and API secret                         |
 | `UPLOAD_DRIVER`              | `auto`, `cloudinary`, or `local`                            |
 | `PUBLIC_DIR`                 | Optional path to the Next.js `public` folder                |
@@ -365,6 +377,12 @@ the Next.js BFF.
 | `/comments/:id`                    | `DELETE`                 | author/admin  |
 | `/wishlist`, `/wishlist/ids`       | `GET`                    | authenticated |
 | `/wishlist/toggle`                 | `POST`                   | active user   |
+| `/notifications`                   | `GET`                    | authenticated |
+| `/notifications/unread-count`      | `GET`                    | authenticated |
+| `/notifications/read-all`          | `POST`                   | authenticated |
+| `/notifications/:id/read`          | `PATCH`                  | owner         |
+| `/notifications/:id`               | `DELETE`                 | owner         |
+| `/notifications/subscriptions`     | `POST`, `DELETE`         | owner         |
 | `/uploads/signature`               | `POST`                   | active user   |
 | `/uploads/direct`                  | `POST`                   | active user   |
 | `/admin/stats`                     | `GET`                    | admin         |
@@ -377,7 +395,8 @@ the Next.js BFF.
 
 Pages: `/`, `/login`, `/register`, `/verify-email`, `/complete-profile`,
 `/browse`, `/listings/[id]`, `/wishlist`, `/sell/new`, `/sell/[id]/edit`,
-`/dashboard`, `/profile`, `/suspended`, and `/admin/*`.
+`/dashboard`, `/profile`, `/notifications`, `/offline`, `/suspended`, and
+`/admin/*`.
 
 ---
 
@@ -394,10 +413,11 @@ api/
   src/modules/listings/       Feed, detail, CRUD, photos, media cleanup
   src/modules/comments/       Threaded Q&A
   src/modules/wishlist/       Saved listings
+  src/modules/notifications/  Bell, push subscriptions, VAPID delivery
   src/modules/uploads/        Cloudinary signature + multipart fallback
   src/modules/admin/          Moderation endpoints
   src/db/                     Migration runner and seed
-  src/scripts/                Admin bootstrap, db:check, email:test
+  src/scripts/                Admin bootstrap, db:check, email:test, push:keys
 src/app/(auth)/               Login, register, verify-email
 src/app/(app)/                Authenticated marketplace pages
 src/app/(app)/students/[id]/  Seller storefront: verified card + their listings
@@ -406,8 +426,10 @@ src/app/api/[...path]/        Same-origin BFF proxy to Express
 src/components/               UI: listings, comments, sellers, admin, auth
 src/lib/api/server.ts         Server-side API client (forwards cookies)
 src/lib/auth/session.ts       Session loading and route guards
-src/lib/data/                 Feed, detail, comments, wishlist, admin fetches
+src/lib/data/                 Feed, detail, comments, wishlist, notifications, admin
 src/proxy.ts                  Silent refresh + cookie forwarding
+public/sw.js                  Service worker: app shell, offline, Web Push
+public/icons/                 PWA install icons (generated from logo.png)
 docs/                         Architecture and deployment notes
 ```
 
@@ -429,11 +451,13 @@ Two supported layouts. Both use the same API, database, and integrations:
 | `uniformity-web` | `.`  | `npm start`      | `/health.txt` |
 
 Create a Blueprint from the repository, then fill the `sync: false` variables
-prompted for the API (`DATABASE_URL`, Cloudinary keys, Gmail credentials). The
-API's `WEB_ORIGIN` and the frontend's `API_URL` already point at each other's
+prompted for the API (`DATABASE_URL`, Cloudinary keys, Gmail credentials, and the
+VAPID pair) and the web service (`NEXT_PUBLIC_VAPID_PUBLIC_KEY`). The API's
+`WEB_ORIGIN` and the frontend's `API_URL` already point at each other's
 default `onrender.com` URLs; update both if Render assigns different
 subdomains. `API_URL` is read at build time (image rewrites) and at runtime
-(the BFF), so changing it requires a redeploy of `uniformity-web`.
+(the BFF), so changing it requires a redeploy of `uniformity-web`. The VAPID
+public key is inlined at build time too.
 
 Free instances sleep after 15 minutes of inactivity, so the first request after
 idle waits for Next.js and then the API to wake (~1–2 minutes).
@@ -446,10 +470,11 @@ After the first deploy of either option:
 
 1. Set the API environment variables from `api/.env.example` (`NODE_ENV=production`,
    `DATABASE_URL` from Supabase, JWT secrets, `WEB_ORIGIN=https://<frontend>`,
-   Cloudinary keys, Gmail API credentials). Leave `DATABASE_SSL=auto` and
-   `COOKIE_SECURE` unset so TLS and secure cookies default to on.
-2. Run `npm run db:check`, `npm run db:migrate` (and optionally `npm run db:seed`
-   and `npm run bootstrap-admin`) against the production database from a local
+   Cloudinary keys, Gmail API credentials, VAPID keys). Leave `DATABASE_SSL=auto`
+   and `COOKIE_SECURE` unset so TLS and secure cookies default to on.
+2. Run `npm run db:check`, `npm run db:migrate` (applies `001`–`005`, including
+   notifications and push subscriptions) and optionally `npm run db:seed`
+   and `npm run bootstrap-admin` against the production database from a local
    machine or a one-off Render shell.
 3. Verify OTP delivery with `npm run email:test -- you@bicol-u.edu.ph`.
 4. Because all browser traffic goes through the Next.js BFF, the API cookies are

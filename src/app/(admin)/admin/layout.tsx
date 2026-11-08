@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowLeft, MessageSquare, Shield, Store, Users } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { requireAdmin } from "@/lib/auth/session";
+import { getUnreadCount } from "@/lib/data/notifications";
 
 const TABS = [
   { href: "/admin", label: "Overview", icon: Shield },
@@ -15,11 +16,14 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await requireAdmin();
+  const [session, unreadCount] = await Promise.all([
+    requireAdmin(),
+    getUnreadCount(),
+  ]);
 
   return (
     <div className="min-h-dvh bg-cream">
-      <Header profile={session.profile} />
+      <Header profile={session.profile} unreadCount={unreadCount} />
       <div className="border-b border-line bg-white">
         <div className="container-page flex items-center gap-1 overflow-x-auto py-2">
           <Link href="/browse" className="btn-ghost mr-1 shrink-0 text-xs">

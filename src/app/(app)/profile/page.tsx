@@ -1,5 +1,7 @@
 import { BadgeCheck, ShieldCheck } from "lucide-react";
 import { ProfileForm } from "@/components/auth/profile-form";
+import { PushToggle } from "@/components/notifications/push-toggle";
+import { InstallPrompt } from "@/components/pwa/install-prompt";
 import { requireVerifiedUser } from "@/lib/auth/session";
 import { formatDate } from "@/lib/utils";
 import { DEPARTMENT_LABELS } from "@/lib/constants";
@@ -52,6 +54,11 @@ export default async function ProfilePage() {
             <dd className="font-medium text-ink">{formatDate(profile.created_at)}</dd>
           </div>
         </dl>
+      </div>
+
+      <div className="mt-5">
+        <PushToggle />
+        <InstallPrompt />
       </div>
 
       <div className="mt-5">

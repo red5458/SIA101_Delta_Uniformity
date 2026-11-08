@@ -161,6 +161,10 @@ CLOUDINARY_CLOUD_NAME=...
 CLOUDINARY_API_KEY=...
 CLOUDINARY_API_SECRET=...
 UPLOAD_DRIVER=cloudinary
+# Web Push. Create a pair once with `npm --prefix api run push:keys`.
+VAPID_PUBLIC_KEY=...
+VAPID_PRIVATE_KEY=...
+VAPID_SUBJECT=mailto:admin@bicol-u.edu.ph
 ```
 
 Notes:
@@ -185,10 +189,13 @@ Import the repository and set:
 
 ```dotenv
 API_URL=https://<your-api>.onrender.com
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=<the API's VAPID_PUBLIC_KEY>
 ```
 
 `API_URL` is used at build time (rewrites) and runtime (BFF), so redeploy after
-changing it.
+changing it. `NEXT_PUBLIC_VAPID_PUBLIC_KEY` is inlined at build time too: use the
+same public key as the API and redeploy if it changes. Leave it unset to ship
+without Web Push; push is skipped rather than erroring.
 
 ### Render web service
 
@@ -199,7 +206,8 @@ changing it.
 - Start command: `npm start`
 - Health check path: `/health.txt` (a static file, so the check does not depend
   on the API being awake)
-- Environment: `API_URL=https://uniformity-api.onrender.com`
+- Environment: `API_URL=https://uniformity-api.onrender.com` and
+  `NEXT_PUBLIC_VAPID_PUBLIC_KEY=<the API's public key>`
 
 If Render assigns a different subdomain to either service, update `API_URL` on
 the frontend and `WEB_ORIGIN` on the API, then redeploy. Free instances sleep
@@ -237,6 +245,10 @@ Then in a browser:
    sold, comment, and save a wishlist item.
 3. Sign in as the admin and check the moderation pages.
 4. Suspend and reinstate the test student.
+5. Ask a question on a listing from a second account and confirm the bell badge
+   and `/notifications` entry appear for the seller.
+6. Install the app from `/profile`, enable push, then trigger another question
+   and confirm the OS notification opens the listing.
 
 ## 6. Operational notes
 
