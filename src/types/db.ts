@@ -29,6 +29,7 @@ export interface Profile {
   contact_email: string | null;
   contact_mobile: string | null;
   contact_messenger: string | null;
+  show_contact_details: boolean;
   avatar_url: string | null;
   created_at: string;
 }

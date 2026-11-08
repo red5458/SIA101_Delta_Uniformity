@@ -25,7 +25,9 @@ import {
 } from "./auth.service";
 import {
   issueSession,
+  getActiveSessions,
   revokeAllSessions,
+  revokeOtherSessions,
   revokeRefreshToken,
   rotateRefreshToken,
   type SessionMeta,
@@ -110,6 +112,22 @@ export async function changePasswordHandler(req: Request, res: Response) {
   const tokens = await issueSession(user, meta(req));
   setAuthCookies(res, tokens);
   return ok(res, { changed: true });
+}
+
+export async function sessionsHandler(req: Request, res: Response) {
+  const user = req.user;
+  if (!user) throw unauthorized();
+  const refreshToken = req.cookies?.[REFRESH_COOKIE] as string | undefined;
+  return ok(res, await getActiveSessions(user.user_id, refreshToken));
+}
+
+export async function signOutOtherSessionsHandler(req: Request, res: Response) {
+  const user = req.user;
+  if (!user) throw unauthorized();
+  const refreshToken = req.cookies?.[REFRESH_COOKIE] as string | undefined;
+  if (!refreshToken) throw unauthorized("Your current session could not be identified. Sign in again.", "SESSION_MISSING");
+  const revoked = await revokeOtherSessions(user.user_id, refreshToken);
+  return ok(res, { revoked });
 }
 
 export async function refreshHandler(req: Request, res: Response) {

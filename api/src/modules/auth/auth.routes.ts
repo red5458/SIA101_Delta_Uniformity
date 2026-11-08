@@ -12,6 +12,8 @@ import {
   registerHandler,
   resendHandler,
   resetPasswordHandler,
+  sessionsHandler,
+  signOutOtherSessionsHandler,
   verifyHandler,
 } from "./auth.controller";
 
@@ -24,6 +26,8 @@ authRouter.post("/login", authLimiter, asyncHandler(loginHandler));
 authRouter.post("/forgot-password", authLimiter, asyncHandler(forgotPasswordHandler));
 authRouter.post("/reset-password", authLimiter, asyncHandler(resetPasswordHandler));
 authRouter.post("/change-password", authenticate, authLimiter, asyncHandler(changePasswordHandler));
+authRouter.get("/sessions", authenticate, asyncHandler(sessionsHandler));
+authRouter.post("/sessions/sign-out-others", authenticate, authLimiter, asyncHandler(signOutOtherSessionsHandler));
 authRouter.post("/refresh", asyncHandler(refreshHandler));
 authRouter.post("/logout", asyncHandler(logoutHandler));
 authRouter.get("/me", authenticate, asyncHandler(meHandler));

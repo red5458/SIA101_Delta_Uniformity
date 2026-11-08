@@ -193,6 +193,11 @@ export async function deleteNotification(userId: string, notificationId: string)
   return { deleted: true, unreadCount: await countUnread(userId) };
 }
 
+export async function deleteAllNotifications(userId: string) {
+  const result = await query(`DELETE FROM notifications WHERE user_id = $1`, [userId]);
+  return { deleted: result.rowCount ?? 0, unreadCount: 0 };
+}
+
 export async function registerPushSubscription(
   userId: string,
   input: {

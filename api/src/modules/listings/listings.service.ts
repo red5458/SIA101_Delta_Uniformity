@@ -46,9 +46,9 @@ const LISTING_SELECT = `
       'program', u.program,
       'year_level', u.year_level,
       'department', u.department,
-      'contact_email', u.contact_email,
-      'contact_mobile', u.contact_mobile,
-      'contact_messenger', u.contact_messenger,
+      'contact_email', CASE WHEN u.show_contact_details THEN u.contact_email ELSE NULL END,
+      'contact_mobile', CASE WHEN u.show_contact_details THEN u.contact_mobile ELSE NULL END,
+      'contact_messenger', CASE WHEN u.show_contact_details THEN u.contact_messenger ELSE NULL END,
       'avatar_url', u.avatar_url,
       'is_verified', u.is_verified
     ) AS seller

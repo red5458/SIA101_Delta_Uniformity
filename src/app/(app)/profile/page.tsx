@@ -1,7 +1,6 @@
-import { BadgeCheck, ShieldCheck } from "lucide-react";
+import Link from "next/link";
+import { BadgeCheck, Settings2, ShieldCheck } from "lucide-react";
 import { ProfileForm } from "@/components/auth/profile-form";
-import { ChangePasswordForm } from "@/components/auth/change-password-form";
-import { PushToggle } from "@/components/notifications/push-toggle";
 import { InstallPrompt } from "@/components/pwa/install-prompt";
 import { requireVerifiedUser } from "@/lib/auth/session";
 import { formatDate } from "@/lib/utils";
@@ -15,10 +14,15 @@ export default async function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <h1 className="font-display text-3xl font-bold text-ink">Your profile</h1>
-      <p className="mt-1 text-sm text-muted">
-        This is what buyers see on your verified seller card.
-      </p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="font-display text-3xl font-bold text-ink">Your profile</h1>
+          <p className="mt-1 text-sm text-muted">
+            This is what buyers see on your verified seller card.
+          </p>
+        </div>
+        <Link href="/settings" className="btn-secondary shrink-0 px-3 py-2 text-xs"><Settings2 className="h-4 w-4" /> Settings</Link>
+      </div>
 
       <div className="card mt-4 p-4">
         <div className="flex flex-wrap items-center gap-2">
@@ -58,15 +62,12 @@ export default async function ProfilePage() {
       </div>
 
       <div className="mt-5">
-        <PushToggle />
         <InstallPrompt />
       </div>
 
       <div className="mt-5">
         <ProfileForm profile={profile} />
       </div>
-
-      <ChangePasswordForm />
     </div>
   );
 }

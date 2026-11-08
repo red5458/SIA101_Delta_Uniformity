@@ -11,6 +11,7 @@ import {
   Menu,
   MessageCircle,
   PlusCircle,
+  Settings2,
   Shield,
   Store,
   User,
@@ -104,6 +105,14 @@ export function Header({
         <div className="flex items-center gap-2">
           <NotificationBell initialCount={unreadCount} />
           <Link
+            href="/settings"
+            title="Settings"
+            aria-label="Settings"
+            className={cn("btn-ghost hidden h-9 w-9 !px-0 lg:inline-flex", pathname.startsWith("/settings") && "bg-brand-50 text-brand-800")}
+          >
+            <Settings2 className="h-4 w-4" />
+          </Link>
+          <Link
             href="/profile"
             className="flex items-center gap-2 rounded-full border border-line bg-white px-2 py-1.5 transition hover:border-brand-200"
           >
@@ -170,6 +179,17 @@ export function Header({
             >
               <User className="h-4 w-4" />
               Profile
+            </Link>
+            <Link
+              href="/settings"
+              onClick={() => setOpen(false)}
+              className={cn(
+                "flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-ink transition-[transform,background-color] duration-100 hover:bg-brand-50 active:scale-[0.98] active:bg-brand-100",
+                pathname.startsWith("/settings") && "bg-brand-50 text-brand-800",
+              )}
+            >
+              <Settings2 className="h-4 w-4" />
+              Settings
             </Link>
             {profile.is_admin && (
               <Link

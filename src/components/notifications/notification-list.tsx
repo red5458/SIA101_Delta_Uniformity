@@ -18,6 +18,7 @@ import {
 import { toast } from "sonner";
 import { cn, formatRelative } from "@/lib/utils";
 import type { Notification, NotificationPage } from "@/types/db";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 function typeIcon(type: Notification["type"]) {
   const className = "h-4 w-4";
@@ -28,8 +29,6 @@ function typeIcon(type: Notification["type"]) {
       return <Reply className={className} />;
     case "message":
       return <MessagesSquare className={className} />;
-    case "wishlist":
-      return <Bookmark className={className} />;
     case "wishlist":
       return <Bookmark className={className} />;
     case "listing_removed":
@@ -72,6 +71,8 @@ export function NotificationList({
   const [unread, setUnread] = useState(initialUnread);
   const [loadingMore, setLoadingMore] = useState(false);
   const [markingAll, setMarkingAll] = useState(false);
+  const [clearingAll, setClearingAll] = useState(false);
+  const [confirmClearOpen, setConfirmClearOpen] = useState(false);
 
   const hasUnread = items.some((item) => !item.read_at);
 
@@ -136,6 +137,30 @@ export function NotificationList({
     }
   }
 
+  async function clearAll() {
+    if (clearingAll || items.length === 0) return;
+    const snapshot = { items, cursor, unread };
+    setClearingAll(true);
+    setItems([]);
+    setCursor(null);
+    setUnread(0);
+    try {
+      const response = await fetch("/api/notifications", { method: "DELETE" });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload?.error?.message ?? "Could not clear notifications.");
+      setConfirmClearOpen(false);
+      window.dispatchEvent(new CustomEvent("uniformity:notifications-updated"));
+      toast.success("All notifications cleared");
+    } catch (error) {
+      setItems(snapshot.items);
+      setCursor(snapshot.cursor);
+      setUnread(snapshot.unread);
+      toast.error(error instanceof Error ? error.message : "Could not clear notifications.");
+    } finally {
+      setClearingAll(false);
+    }
+  }
+
   async function loadMore() {
     if (!cursor || loadingMore) return;
     setLoadingMore(true);
@@ -168,19 +193,26 @@ export function NotificationList({
         <p className="text-sm text-muted">
           {unread > 0 ? `${unread} unread` : "You are all caught up"}
         </p>
-        <button
-          type="button"
-          onClick={markAll}
-          disabled={markingAll || !hasUnread}
-          className="btn-secondary h-9 text-sm disabled:opacity-50"
-        >
-          {markingAll ? (
-            <LoaderCircle className="h-4 w-4 animate-spin" />
-          ) : (
-            <CheckCheck className="h-4 w-4" />
-          )}
-          Mark all read
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={markAll}
+            disabled={markingAll || !hasUnread}
+            className="btn-secondary h-9 text-sm disabled:opacity-50"
+          >
+            {markingAll ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <CheckCheck className="h-4 w-4" />}
+            Mark all read
+          </button>
+          <button
+            type="button"
+            onClick={() => setConfirmClearOpen(true)}
+            disabled={clearingAll || items.length === 0}
+            className="btn-secondary h-9 text-sm text-red-700 disabled:opacity-50"
+          >
+            {clearingAll ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+            Clear all
+          </button>
+        </div>
       </div>
 
       {items.length === 0 ? (
@@ -273,6 +305,15 @@ export function NotificationList({
           </button>
         </div>
       )}
+      <ConfirmDialog
+        open={confirmClearOpen}
+        title="Clear all notifications?"
+        description="This permanently removes all of your notifications. This action cannot be undone."
+        confirmLabel="Clear all"
+        pending={clearingAll}
+        onCancel={() => setConfirmClearOpen(false)}
+        onConfirm={() => void clearAll()}
+      />
     </div>
   );
 }

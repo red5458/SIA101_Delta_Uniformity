@@ -11,6 +11,7 @@ import {
 import {
   countUnread,
   deleteNotification,
+  deleteAllNotifications,
   listNotifications,
   markAllNotificationsRead,
   markNotificationRead,
@@ -49,6 +50,11 @@ export async function deleteHandler(req: Request, res: Response) {
   const user = currentUser(req);
   const id = notificationIdSchema.parse(req.params.id);
   return ok(res, await deleteNotification(user.user_id, id));
+}
+
+export async function deleteAllHandler(req: Request, res: Response) {
+  const user = currentUser(req);
+  return ok(res, await deleteAllNotifications(user.user_id));
 }
 
 export async function subscribeHandler(req: Request, res: Response) {

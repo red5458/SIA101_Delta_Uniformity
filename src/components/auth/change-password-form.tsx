@@ -40,7 +40,7 @@ export function ChangePasswordForm() {
   }
 
   return (
-    <form onSubmit={submit} className="card mt-5 space-y-4 p-4 sm:p-6">
+    <form onSubmit={submit} className="card space-y-4 p-4 sm:p-6">
       <div>
         <h2 className="flex items-center gap-2 font-display text-lg font-bold text-ink"><KeyRound className="h-5 w-5 text-brand-600" /> Change password</h2>
         <p className="mt-1 text-sm text-muted">Confirm your current password before choosing a new one.</p>

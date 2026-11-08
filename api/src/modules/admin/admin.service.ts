@@ -37,6 +37,25 @@ export interface AdminCommentRow {
   listing: { title: string } | null;
 }
 
+export interface AccountDeletionRequestRow {
+  request_id: string;
+  user_id: string;
+  name: string;
+  email: string;
+  requested_at: string;
+}
+
+export async function listAccountDeletionRequests(): Promise<AccountDeletionRequestRow[]> {
+  const { rows } = await query<Omit<AccountDeletionRequestRow, "requested_at"> & { requested_at: Date | string }>(
+    `SELECT r.request_id, r.user_id, u.name, u.email, r.requested_at
+       FROM account_deletion_requests r
+       JOIN users u ON u.user_id = r.user_id
+      WHERE r.status = 'pending'
+      ORDER BY r.requested_at ASC`,
+  );
+  return rows.map((row) => ({ ...row, requested_at: new Date(row.requested_at).toISOString() }));
+}
+
 export async function getAdminStats(): Promise<AdminStats> {
   const { rows } = await query<AdminStats>(
     `SELECT

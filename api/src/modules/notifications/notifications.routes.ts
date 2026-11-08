@@ -4,6 +4,7 @@ import { writeLimiter } from "../../middleware/rateLimit";
 import { asyncHandler } from "../../utils/http";
 import {
   deleteHandler,
+  deleteAllHandler,
   listHandler,
   markAllReadHandler,
   markReadHandler,
@@ -31,5 +32,6 @@ notificationsRouter.delete(
 );
 
 notificationsRouter.get("/", asyncHandler(listHandler));
+notificationsRouter.delete("/", writeLimiter, asyncHandler(deleteAllHandler));
 notificationsRouter.patch("/:id/read", asyncHandler(markReadHandler));
 notificationsRouter.delete("/:id", asyncHandler(deleteHandler));
