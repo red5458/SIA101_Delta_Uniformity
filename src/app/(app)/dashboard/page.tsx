@@ -1,18 +1,27 @@
 import Link from "next/link";
 import Image from "next/image";
-import { BadgeCheck, PackageOpen, Pencil, PlusCircle, Store, Tag } from "lucide-react";
+import { BadgeCheck, Bookmark, ChevronDown, PackageOpen, Pencil, PlusCircle, Store, Tag } from "lucide-react";
 import { DeleteListingButton } from "@/components/listings/delete-listing-button";
 import { StatusToggle } from "@/components/listings/status-toggle";
 import { requireVerifiedUser } from "@/lib/auth/session";
-import { getSellerListings } from "@/lib/data/listings";
-import { formatPrice, formatRelative } from "@/lib/utils";
+import { getSellerListings, getSellerWishlistSavers } from "@/lib/data/listings";
+import { formatPrice, formatRelative, initials } from "@/lib/utils";
 import { DEPARTMENT_LABELS, departmentAccent } from "@/lib/constants";
 
 export const metadata = { title: "My listings | Uniformity" };
 
 export default async function DashboardPage() {
   await requireVerifiedUser();
-  const listings = await getSellerListings();
+  const [listings, wishlistSavers] = await Promise.all([
+    getSellerListings(),
+    getSellerWishlistSavers(),
+  ]);
+  const saversByListing = new Map<string, typeof wishlistSavers>();
+  for (const saver of wishlistSavers) {
+    const current = saversByListing.get(saver.listing_id) ?? [];
+    current.push(saver);
+    saversByListing.set(saver.listing_id, current);
+  }
 
   const active = listings.filter((listing) => listing.status === "Active").length;
   const sold = listings.filter((listing) => listing.status === "Sold").length;
@@ -74,7 +83,7 @@ export default async function DashboardPage() {
             return (
               <article
                 key={listing.listing_id}
-                className="card flex flex-col gap-3 p-3 sm:flex-row sm:items-center"
+                className="card flex flex-col gap-3 p-3 sm:flex-row sm:flex-wrap sm:items-center"
               >
                 <Link
                   href={`/listings/${listing.listing_id}`}
@@ -151,6 +160,62 @@ export default async function DashboardPage() {
                   />
                   <DeleteListingButton listingId={listing.listing_id} />
                 </div>
+
+                <details className="group w-full rounded-xl border border-line bg-cream/60 sm:basis-full">
+                  <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2.5 text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden">
+                    <Bookmark className="h-4 w-4 text-brand-700" />
+                    <span className="flex-1">
+                      {(() => {
+                        const count = saversByListing.get(listing.listing_id)?.length ?? 0;
+                        return count
+                          ? `Saved by ${count} student${count === 1 ? "" : "s"}`
+                          : "No students have saved this yet";
+                      })()}
+                    </span>
+                    <ChevronDown className="h-4 w-4 text-muted transition-transform group-open:rotate-180" />
+                  </summary>
+                  {(() => {
+                    const savers = saversByListing.get(listing.listing_id) ?? [];
+                    return savers.length ? (
+                      <ul className="space-y-1 border-t border-line px-3 py-2">
+                        {savers.map((saver) => {
+                          const studentDetails = [
+                            saver.program,
+                            saver.year_level,
+                            saver.department ? DEPARTMENT_LABELS[saver.department] : null,
+                          ].filter(Boolean).join(" · ");
+                          return (
+                            <li key={saver.wishlist_id}>
+                              <Link
+                                href={`/students/${saver.user_id}`}
+                                className="flex items-center gap-2.5 rounded-lg px-1 py-2 transition-colors hover:bg-white/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400"
+                              >
+                              <span className="relative grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full bg-brand-100 text-xs font-bold text-brand-800">
+                                {saver.avatar_url ? (
+                                  <Image src={saver.avatar_url} alt="" fill sizes="36px" className="object-cover" />
+                                ) : (
+                                  initials(saver.name)
+                                )}
+                              </span>
+                              <span className="min-w-0 flex-1">
+                                <span className="block truncate text-sm font-semibold text-ink">{saver.name}</span>
+                                {studentDetails && <span className="block truncate text-xs text-muted">{studentDetails}</span>}
+                              </span>
+                              <time className="shrink-0 text-[11px] text-muted" dateTime={saver.created_at}>
+                                {formatRelative(saver.created_at)}
+                              </time>
+                              </Link>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    ) : (
+                      <p className="border-t border-line px-3 py-3 text-xs text-muted">
+                        When a student saves this listing, they will appear here.
+                      </p>
+                    );
+                  })()}
+                </details>
               </article>
             );
           })}

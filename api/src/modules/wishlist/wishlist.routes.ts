@@ -7,7 +7,11 @@ import type { Request, Response } from "express";
 import { unauthorized } from "../../utils/ApiError";
 import { asyncHandler, ok } from "../../utils/http";
 import { getWishlistIds } from "../listings/listings.service";
-import { getWishlistListings, toggleWishlist } from "./wishlist.service";
+import {
+  getSellerWishlistSavers,
+  getWishlistListings,
+  toggleWishlist,
+} from "./wishlist.service";
 
 const toggleSchema = z.object({ listingId: z.string().uuid() });
 
@@ -25,6 +29,12 @@ async function idsHandler(req: Request, res: Response) {
   return ok(res, Array.from(ids));
 }
 
+async function sellerSaversHandler(req: Request, res: Response) {
+  const user = req.user;
+  if (!user) throw unauthorized();
+  return ok(res, await getSellerWishlistSavers(user.user_id));
+}
+
 async function toggleHandler(req: Request, res: Response) {
   const user = req.user;
   if (!user) throw unauthorized();
@@ -38,6 +48,7 @@ export const wishlistRouter = Router();
 wishlistRouter.use(authenticate);
 wishlistRouter.get("/", asyncHandler(listHandler));
 wishlistRouter.get("/ids", asyncHandler(idsHandler));
+wishlistRouter.get("/seller-savers", requireActive, asyncHandler(sellerSaversHandler));
 wishlistRouter.post(
   "/toggle",
   requireActive,
