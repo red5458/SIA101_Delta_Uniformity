@@ -12,6 +12,7 @@ import { authRouter } from "./modules/auth/auth.routes";
 import { commentsRouter } from "./modules/comments/comments.routes";
 import { listingsRouter } from "./modules/listings/listings.routes";
 import { notificationsRouter } from "./modules/notifications/notifications.routes";
+import { pushConfigured } from "./modules/notifications/push.service";
 import { profileRouter } from "./modules/profile/profile.routes";
 import { sellersRouter } from "./modules/sellers/sellers.routes";
 import { uploadsRouter } from "./modules/uploads/uploads.routes";
@@ -70,6 +71,7 @@ export function createApp() {
       res.json({
         status: "ok",
         db: "up",
+        push: pushConfigured,
         uptimeSeconds: Math.round(process.uptime()),
         version: process.env.npm_package_version ?? "1.0.0",
       });

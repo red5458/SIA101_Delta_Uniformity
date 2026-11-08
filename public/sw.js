@@ -1,5 +1,5 @@
 /* Uniformity service worker: app shell, offline fallback, and Web Push. */
-const VERSION = "v1";
+const VERSION = "v2";
 const SHELL_CACHE = `uniformity-shell-${VERSION}`;
 const RUNTIME_CACHE = `uniformity-runtime-${VERSION}`;
 const SHELL_ASSETS = [
@@ -103,13 +103,24 @@ self.addEventListener("push", (event) => {
   }
 
   event.waitUntil(
-    self.registration.showNotification(payload.title || "Uniformity", {
-      body: payload.body || "",
-      icon: payload.icon || "/icons/icon-192.png",
-      badge: payload.badge || "/icons/icon-192.png",
-      tag: payload.tag || "uniformity",
-      data: { url: payload.url || "/notifications" },
-    }),
+    (async () => {
+      await self.registration.showNotification(payload.title || "Uniformity", {
+        body: payload.body || "",
+        icon: payload.icon || "/icons/icon-192.png",
+        badge: payload.badge || "/icons/icon-192.png",
+        tag: payload.tag || "uniformity",
+        data: { url: payload.url || "/notifications" },
+      });
+
+      // Tell any open tab so the bell badge updates without a refresh.
+      const clients = await self.clients.matchAll({
+        type: "window",
+        includeUncontrolled: true,
+      });
+      for (const client of clients) {
+        client.postMessage({ type: "UNREAD_CHANGED" });
+      }
+    })(),
   );
 });
 

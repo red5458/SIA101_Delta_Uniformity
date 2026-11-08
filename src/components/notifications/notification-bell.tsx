@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   Bell,
@@ -58,42 +58,80 @@ export function NotificationBell({ initialCount = 0 }: { initialCount?: number }
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [items, setItems] = useState<Notification[]>([]);
+  const openRef = useRef(open);
+
+  useEffect(() => {
+    openRef.current = open;
+  }, [open]);
 
   useEffect(() => {
     setCount(initialCount);
   }, [initialCount]);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function refresh() {
-      if (document.visibilityState !== "visible") return;
-      try {
-        const response = await fetch("/api/notifications/unread-count", {
-          cache: "no-store",
-        });
-        if (!response.ok) return;
-        const payload = await response.json();
-        if (!cancelled) setCount(Number(payload?.data?.count ?? 0));
-      } catch {
-        // Offline or API asleep; keep the last known badge.
+  /** Loads the dropdown preview and syncs the badge with it. */
+  const loadItems = useCallback(async () => {
+    try {
+      const response = await fetch("/api/notifications?limit=6", {
+        cache: "no-store",
+      });
+      if (!response.ok) return;
+      const payload = await response.json();
+      if (payload?.data) {
+        setItems(payload.data.items ?? []);
+        setCount(Number(payload.data.unreadCount ?? 0));
       }
+    } catch {
+      // Keep whatever preview is already displayed.
     }
+  }, []);
 
-    const timer = window.setInterval(refresh, 60_000);
+  const refreshCount = useCallback(async () => {
+    if (document.visibilityState !== "visible") return;
+    try {
+      const response = await fetch("/api/notifications/unread-count", {
+        cache: "no-store",
+      });
+      if (!response.ok) return;
+      const payload = await response.json();
+      setCount(Number(payload?.data?.count ?? 0));
+    } catch {
+      // Offline or API asleep; keep the last known badge.
+    }
+  }, []);
+
+  // Seed on mount (the server layout can hand down a cached RSC payload), then
+  // poll only while the tab is visible.
+  useEffect(() => {
+    void refreshCount();
+    const timer = window.setInterval(() => void refreshCount(), 30_000);
     const onVisible = () => {
-      if (document.visibilityState === "visible") void refresh();
+      if (document.visibilityState === "visible") void refreshCount();
     };
     document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("focus", onVisible);
 
     return () => {
-      cancelled = true;
       window.clearInterval(timer);
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("focus", onVisible);
     };
-  }, []);
+  }, [refreshCount]);
+
+  // A Web Push that lands while a tab is open pings the page, so the badge
+  // updates immediately instead of waiting for the next poll.
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+
+    const onMessage = (event: MessageEvent) => {
+      if (event.data?.type !== "UNREAD_CHANGED") return;
+      void refreshCount();
+      if (openRef.current) void loadItems();
+    };
+
+    navigator.serviceWorker.addEventListener("message", onMessage);
+    return () =>
+      navigator.serviceWorker.removeEventListener("message", onMessage);
+  }, [refreshCount, loadItems]);
 
   async function toggle() {
     const next = !open;
@@ -102,16 +140,7 @@ export function NotificationBell({ initialCount = 0 }: { initialCount?: number }
 
     setLoading(true);
     try {
-      const response = await fetch("/api/notifications?limit=6", {
-        cache: "no-store",
-      });
-      const payload = await response.json();
-      if (response.ok && payload?.data) {
-        setItems(payload.data.items ?? []);
-        setCount(Number(payload.data.unreadCount ?? 0));
-      }
-    } catch {
-      // Keep whatever preview is already displayed.
+      await loadItems();
     } finally {
       setLoading(false);
     }

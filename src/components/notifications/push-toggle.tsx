@@ -28,6 +28,20 @@ function urlBase64ToUint8Array(base64String: string) {
 }
 
 /**
+ * The worker registers right after mount, so `getRegistration()` can briefly
+ * return nothing on a first visit. Wait for `ready` (capped) before declaring
+ * push unsupported.
+ */
+async function currentRegistration(): Promise<ServiceWorkerRegistration | null> {
+  const existing = await navigator.serviceWorker.getRegistration();
+  if (existing) return existing;
+  return Promise.race([
+    navigator.serviceWorker.ready,
+    new Promise<null>((resolve) => window.setTimeout(() => resolve(null), 5000)),
+  ]);
+}
+
+/**
  * Registers this browser for Web Push. Permission is only requested from the
  * tap handler, which iOS requires, and a missing VAPID key in the build simply
  * disables the card instead of failing.
@@ -62,7 +76,7 @@ export function PushToggle() {
       return;
     }
 
-    const registration = await navigator.serviceWorker.getRegistration();
+    const registration = await currentRegistration();
     if (!registration) {
       setState("unsupported");
       return;
@@ -86,7 +100,10 @@ export function PushToggle() {
         return;
       }
 
-      const registration = await navigator.serviceWorker.ready;
+      const registration = await currentRegistration();
+      if (!registration) {
+        throw new Error("The app shell is still installing. Reload and try again.");
+      }
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(PUBLIC_KEY),
@@ -127,7 +144,7 @@ export function PushToggle() {
   async function disable() {
     setState("pending");
     try {
-      const registration = await navigator.serviceWorker.getRegistration();
+      const registration = await currentRegistration();
       const subscription = await registration?.pushManager.getSubscription();
 
       if (subscription) {
