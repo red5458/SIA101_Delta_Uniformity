@@ -287,9 +287,12 @@ Gmail setup:
 1. Create a Google Cloud project and enable the **Gmail API**.
 2. Configure the OAuth consent screen and add the `https://mail.google.com/`
    scope (required by `gmail.send`).
-3. Create an OAuth client of type **Desktop app** and note the client ID/secret.
+3. Create an OAuth client of type **Web application** and add
+   `https://developers.google.com/oauthplayground` as an authorized redirect
+   URI. Note the client ID/secret.
 4. Authorize with the sending mailbox and exchange the code for a refresh token
-   (OAuth 2.0 Playground or `oauth2l`).
+   in the [OAuth 2.0 Playground](https://developers.google.com/oauthplayground)
+   (gear icon → *Use your own OAuth credentials*).
 5. Set `EMAIL_MODE=gmail`, `GMAIL_USER`, `GMAIL_CLIENT_ID`,
    `GMAIL_CLIENT_SECRET`, `GMAIL_REFRESH_TOKEN`, and
    `MAIL_FROM=Uniformity <the-same-gmail-address>`.

@@ -72,13 +72,16 @@ The API sends OTPs through the Gmail REST API, not SMTP. One-time setup:
    requires it for sending). While the app is in *Testing*, add the sending
    mailbox as a test user.
 4. **OAuth client** — *Credentials → Create credentials → OAuth client ID →
-   Desktop app*. Copy the client ID and client secret.
+   Web application*. Add `https://developers.google.com/oauthplayground` under
+   *Authorized redirect URIs*, then copy the client ID and client secret.
 5. **Refresh token** — authorize the sending account and exchange the code:
 
    - *Google OAuth 2.0 Playground*: gear icon → check *Use your own OAuth
-     credentials* → enter the client ID/secret → scope `https://mail.google.com/`
+     credentials* → enter the client ID/secret → scope
+     `https://www.googleapis.com/auth/gmail.send` (or `https://mail.google.com/`)
      → *Authorize APIs* → exchange the authorization code for tokens → copy
-     `refresh_token`.
+     `refresh_token`. The Playground only issues a permanent token when your own
+     credentials are used; otherwise it revokes it after 24 hours.
    - Or use `oauth2l` / a short local script with a loopback redirect.
 6. **Verify the token** — the Google token endpoint returns
    `{"error":"invalid_grant"}` if the token was revoked, the account password
