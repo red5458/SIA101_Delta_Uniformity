@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import {
+  Bookmark,
   Bell,
   CheckCheck,
   LoaderCircle,
@@ -27,6 +28,10 @@ function typeIcon(type: Notification["type"]) {
       return <Reply className={className} />;
     case "message":
       return <MessagesSquare className={className} />;
+    case "wishlist":
+      return <Bookmark className={className} />;
+    case "wishlist":
+      return <Bookmark className={className} />;
     case "listing_removed":
     case "comment_removed":
       return <Trash2 className={className} />;

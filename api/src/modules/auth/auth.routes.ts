@@ -4,11 +4,14 @@ import { authLimiter } from "../../middleware/rateLimit";
 import { asyncHandler } from "../../utils/http";
 import {
   loginHandler,
+  changePasswordHandler,
+  forgotPasswordHandler,
   logoutHandler,
   meHandler,
   refreshHandler,
   registerHandler,
   resendHandler,
+  resetPasswordHandler,
   verifyHandler,
 } from "./auth.controller";
 
@@ -18,6 +21,9 @@ authRouter.post("/register", authLimiter, asyncHandler(registerHandler));
 authRouter.post("/verify", authLimiter, asyncHandler(verifyHandler));
 authRouter.post("/resend", authLimiter, asyncHandler(resendHandler));
 authRouter.post("/login", authLimiter, asyncHandler(loginHandler));
+authRouter.post("/forgot-password", authLimiter, asyncHandler(forgotPasswordHandler));
+authRouter.post("/reset-password", authLimiter, asyncHandler(resetPasswordHandler));
+authRouter.post("/change-password", authenticate, authLimiter, asyncHandler(changePasswordHandler));
 authRouter.post("/refresh", asyncHandler(refreshHandler));
 authRouter.post("/logout", asyncHandler(logoutHandler));
 authRouter.get("/me", authenticate, asyncHandler(meHandler));

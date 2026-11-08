@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   Bell,
+  Bookmark,
   CheckCheck,
   LoaderCircle,
   MessageSquare,
@@ -25,6 +26,8 @@ function typeIcon(type: Notification["type"]) {
       return <Reply className={className} />;
     case "message":
       return <MessagesSquare className={className} />;
+    case "wishlist":
+      return <Bookmark className={className} />;
     case "listing_removed":
     case "comment_removed":
       return <Trash2 className={className} />;

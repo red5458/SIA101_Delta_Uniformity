@@ -113,6 +113,7 @@ export type NotificationType =
   | "comment"
   | "reply"
   | "message"
+  | "wishlist"
   | "listing_removed"
   | "comment_removed"
   | "suspended"

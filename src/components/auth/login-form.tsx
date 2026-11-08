@@ -89,6 +89,12 @@ export function LoginForm() {
         </div>
       </div>
 
+      <div className="-mt-2 flex justify-end">
+        <Link href="/forgot-password" className="text-xs font-semibold text-brand-700 hover:underline">
+          Forgot password?
+        </Link>
+      </div>
+
       <button type="submit" disabled={pending} className="btn-primary w-full">
         {pending && <Loader2 className="h-4 w-4 animate-spin" />}
         Sign in

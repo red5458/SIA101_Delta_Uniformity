@@ -60,6 +60,33 @@ export const verifySchema = z.object({
 
 export const resendSchema = z.object({ email: emailSchema });
 
+export const forgotPasswordSchema = z.object({ email: emailSchema });
+
+const newPasswordSchema = z.string().min(8, "Use at least 8 characters").max(72);
+
+export const resetPasswordSchema = z
+  .object({
+    email: emailSchema,
+    otp: z.string().trim().regex(/^\d{6}$/, "Enter the 6-digit code from your email"),
+    password: newPasswordSchema,
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "Passwords do not match",
+  });
+
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Enter your current password"),
+    password: newPasswordSchema,
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "Passwords do not match",
+  });
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type VerifyInput = z.infer<typeof verifySchema>;

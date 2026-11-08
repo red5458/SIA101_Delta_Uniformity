@@ -1,6 +1,6 @@
 import { env } from "../../config/env";
 import { query } from "../../config/db";
-import { sendVerificationEmail } from "../../config/mailer";
+import { sendPasswordResetEmail, sendVerificationEmail } from "../../config/mailer";
 import type { UserRow } from "../../types";
 import {
   badRequest,
@@ -9,6 +9,7 @@ import {
 } from "../../utils/ApiError";
 import { generateOtp, hashOtp, safeEqualHex } from "../../utils/crypto";
 import { hashPassword, verifyPassword } from "../../utils/password";
+import { revokeAllSessions } from "./auth.tokens";
 import type { RegisterInput } from "./auth.schema";
 
 interface VerificationRow {
@@ -23,6 +24,15 @@ interface VerificationRow {
 interface OtpResult {
   sent: boolean;
   code?: string;
+}
+
+interface PasswordResetCodeRow {
+  code_id: string;
+  code_hash: string;
+  attempts: number;
+  expires_at: Date;
+  consumed_at: Date | null;
+  created_at: Date;
 }
 
 export async function findUserByEmail(email: string): Promise<UserRow | null> {
@@ -258,4 +268,82 @@ export async function login(email: string, password: string): Promise<LoginResul
   }
 
   return { user };
+}
+
+async function latestPasswordResetCode(userId: string): Promise<PasswordResetCodeRow | null> {
+  const { rows } = await query<PasswordResetCodeRow>(
+    `SELECT code_id, code_hash, attempts, expires_at, consumed_at, created_at
+       FROM password_reset_codes
+      WHERE user_id = $1 AND consumed_at IS NULL
+      ORDER BY created_at DESC LIMIT 1`,
+    [userId],
+  );
+  return rows[0] ?? null;
+}
+
+export async function requestPasswordReset(email: string) {
+  const user = await findUserByEmail(email);
+  // Always return the same response to avoid account enumeration.
+  if (!user || !user.is_verified) return { sent: true };
+
+  const previous = await latestPasswordResetCode(user.user_id);
+  if (previous && Date.now() - previous.created_at.getTime() < env.OTP_RESEND_COOLDOWN_SECONDS * 1000) {
+    return { sent: true };
+  }
+
+  const code = generateOtp();
+  const expiresAt = new Date(Date.now() + env.OTP_TTL_MINUTES * 60 * 1000);
+  await query(
+    `UPDATE password_reset_codes SET consumed_at = now()
+      WHERE user_id = $1 AND consumed_at IS NULL`,
+    [user.user_id],
+  );
+  await query(
+    `INSERT INTO password_reset_codes (user_id, code_hash, expires_at)
+     VALUES ($1, $2, $3)`,
+    [user.user_id, hashOtp(user.email, code), expiresAt],
+  );
+  await sendPasswordResetEmail(user.email, code);
+  return { sent: true, ...(env.exposeDevOtp ? { devOtp: code } : {}) };
+}
+
+export async function resetPassword(input: { email: string; otp: string; password: string }) {
+  const user = await findUserByEmail(input.email);
+  const record = user?.is_verified ? await latestPasswordResetCode(user.user_id) : null;
+  if (!user || !record) throw badRequest("That code is invalid or has expired.", "INVALID_RESET_CODE");
+  if (record.expires_at.getTime() <= Date.now()) {
+    await query(`UPDATE password_reset_codes SET consumed_at = now() WHERE code_id = $1`, [record.code_id]);
+    throw badRequest("That code has expired. Request a new one.", "RESET_CODE_EXPIRED");
+  }
+  if (record.attempts >= env.OTP_MAX_ATTEMPTS) {
+    throw badRequest("Too many incorrect attempts. Request a new code.", "RESET_CODE_LOCKED");
+  }
+  if (!safeEqualHex(record.code_hash, hashOtp(user.email, input.otp))) {
+    const attempts = record.attempts + 1;
+    await query(`UPDATE password_reset_codes SET attempts = $2 WHERE code_id = $1`, [record.code_id, attempts]);
+    const remaining = Math.max(0, env.OTP_MAX_ATTEMPTS - attempts);
+    throw badRequest(remaining ? `That code is not correct. ${remaining} attempt${remaining === 1 ? "" : "s"} left.` : "Too many incorrect attempts. Request a new code.", "INVALID_RESET_CODE");
+  }
+
+  const consumed = await query(
+    `UPDATE password_reset_codes SET consumed_at = now()
+      WHERE code_id = $1 AND consumed_at IS NULL`,
+    [record.code_id],
+  );
+  if (!consumed.rowCount) throw badRequest("That code is invalid or has expired.", "INVALID_RESET_CODE");
+  const passwordHash = await hashPassword(input.password);
+  await query(`UPDATE users SET password_hash = $2, updated_at = now() WHERE user_id = $1`, [user.user_id, passwordHash]);
+  await revokeAllSessions(user.user_id);
+  return { reset: true };
+}
+
+export async function changePassword(user: UserRow, currentPassword: string, newPassword: string) {
+  if (!(await verifyPassword(currentPassword, user.password_hash))) {
+    throw badRequest("Your current password is incorrect.", "CURRENT_PASSWORD_INCORRECT");
+  }
+  if (await verifyPassword(newPassword, user.password_hash)) {
+    throw badRequest("Choose a password you have not used before.", "PASSWORD_UNCHANGED");
+  }
+  const passwordHash = await hashPassword(newPassword);
+  await query(`UPDATE users SET password_hash = $2, updated_at = now() WHERE user_id = $1`, [user.user_id, passwordHash]);
 }

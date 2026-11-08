@@ -1,5 +1,6 @@
 import { BadgeCheck, ShieldCheck } from "lucide-react";
 import { ProfileForm } from "@/components/auth/profile-form";
+import { ChangePasswordForm } from "@/components/auth/change-password-form";
 import { PushToggle } from "@/components/notifications/push-toggle";
 import { InstallPrompt } from "@/components/pwa/install-prompt";
 import { requireVerifiedUser } from "@/lib/auth/session";
@@ -64,6 +65,8 @@ export default async function ProfilePage() {
       <div className="mt-5">
         <ProfileForm profile={profile} />
       </div>
+
+      <ChangePasswordForm />
     </div>
   );
 }
