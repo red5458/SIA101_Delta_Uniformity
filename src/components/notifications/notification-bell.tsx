@@ -7,6 +7,7 @@ import {
   CheckCheck,
   LoaderCircle,
   MessageSquare,
+  MessagesSquare,
   Reply,
   ShieldAlert,
   ShieldCheck,
@@ -22,6 +23,8 @@ function typeIcon(type: Notification["type"]) {
       return <MessageSquare className={className} />;
     case "reply":
       return <Reply className={className} />;
+    case "message":
+      return <MessagesSquare className={className} />;
     case "listing_removed":
     case "comment_removed":
       return <Trash2 className={className} />;

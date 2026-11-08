@@ -8,7 +8,7 @@ export function NavigationTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const routeKey = `${pathname}?${searchParams.toString()}`;
-  const hasMobileAppNav = ["/browse", "/wishlist", "/sell", "/dashboard", "/profile", "/listings"]
+  const hasMobileAppNav = ["/browse", "/wishlist", "/sell", "/dashboard", "/profile", "/listings", "/messages"]
     .some((route) => pathname === route || pathname.startsWith(`${route}/`));
   const hasStickyHeader = hasMobileAppNav || pathname === "/";
   const blurBounds = hasMobileAppNav

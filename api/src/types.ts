@@ -122,6 +122,8 @@ export interface CommentRow {
 export type NotificationType =
   | "comment"
   | "reply"
+  | "message"
+  | "message"
   | "listing_removed"
   | "comment_removed"
   | "suspended"

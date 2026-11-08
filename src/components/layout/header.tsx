@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  MessageCircle,
   PlusCircle,
   Shield,
   Store,
@@ -25,6 +26,7 @@ import { departmentAccent } from "@/lib/constants";
 const NAV = [
   { href: "/browse", label: "Browse", icon: Store },
   { href: "/wishlist", label: "Wishlist", icon: Bookmark },
+  { href: "/messages", label: "Messages", icon: MessageCircle },
   { href: "/sell/new", label: "Sell", icon: PlusCircle },
   { href: "/dashboard", label: "My Listings", icon: LayoutDashboard },
 ];

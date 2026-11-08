@@ -2,31 +2,36 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bookmark, LayoutDashboard, PlusCircle, Store } from "lucide-react";
+import { Bookmark, LayoutDashboard, MessageCircle, PlusCircle, Store } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const ITEMS = [
   { href: "/browse", label: "Browse", icon: Store },
   { href: "/wishlist", label: "Saved", icon: Bookmark },
+  { href: "/messages", label: "Chats", icon: MessageCircle },
   { href: "/sell/new", label: "Sell", icon: PlusCircle },
   { href: "/dashboard", label: "Mine", icon: LayoutDashboard },
 ];
 
 export function MobileNav() {
   const pathname = usePathname();
-  const activeIndex = ITEMS.findIndex((item) => pathname === item.href);
+  const activeIndex = ITEMS.findIndex((item) =>
+    item.href === "/messages" ? pathname.startsWith(item.href) : pathname === item.href,
+  );
   const indicatorIndex = activeIndex < 0 ? 0 : activeIndex;
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white pb-[env(safe-area-inset-bottom)] md:hidden">
-      <div className="relative grid grid-cols-4">
+      <div className="relative grid grid-cols-5">
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute inset-y-1 left-0 w-1/4 rounded-xl bg-brand-50 transition-transform duration-300 ease-out motion-reduce:transition-none"
+          className="pointer-events-none absolute inset-y-1 left-0 w-1/5 rounded-xl bg-brand-50 transition-transform duration-300 ease-out motion-reduce:transition-none"
           style={{ transform: `translateX(${indicatorIndex * 100}%)` }}
         />
         {ITEMS.map((item) => {
-          const active = pathname === item.href;
+          const active = item.href === "/messages"
+            ? pathname.startsWith(item.href)
+            : pathname === item.href;
           return (
             <Link
               key={item.href}

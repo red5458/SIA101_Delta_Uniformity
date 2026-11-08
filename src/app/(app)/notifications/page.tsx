@@ -12,8 +12,7 @@ export default async function NotificationsPage() {
     <div className="mx-auto max-w-3xl">
       <h1 className="font-display text-3xl font-bold text-ink">Notifications</h1>
       <p className="mt-1 text-sm text-muted">
-        Questions on your listings, replies to your questions, and moderation
-        updates.
+        Questions on your listings, private messages, and moderation updates.
       </p>
 
       <NotificationList

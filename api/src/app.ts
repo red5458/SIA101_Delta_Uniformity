@@ -10,6 +10,7 @@ import { query } from "./config/db";
 import { adminRouter } from "./modules/admin/admin.routes";
 import { authRouter } from "./modules/auth/auth.routes";
 import { commentsRouter } from "./modules/comments/comments.routes";
+import { chatRouter } from "./modules/chat/chat.routes";
 import { listingsRouter } from "./modules/listings/listings.routes";
 import { notificationsRouter } from "./modules/notifications/notifications.routes";
 import { pushConfigured } from "./modules/notifications/push.service";
@@ -108,6 +109,7 @@ export function createApp() {
   app.use("/api/listings", listingsRouter);
   app.use("/api/sellers", sellersRouter);
   app.use("/api/comments", commentsRouter);
+  app.use("/api/conversations", chatRouter);
   app.use("/api/wishlist", wishlistRouter);
   app.use("/api/notifications", notificationsRouter);
   app.use("/api/uploads", uploadsRouter);
