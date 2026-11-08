@@ -4,7 +4,9 @@ services:
     runtime: node
     plan: free
     rootDir: api
-    buildCommand: npm ci && npm run build
+    # `--include=dev` keeps TypeScript/tsx available even though NODE_ENV is
+    # production during the build; plain `npm ci` would skip them.
+    buildCommand: npm ci --include=dev && npm run build
     startCommand: npm start
     healthCheckPath: /health
     autoDeploy: true
@@ -24,8 +26,10 @@ services:
         generateValue: true
       - key: JWT_REFRESH_SECRET
         generateValue: true
+      # Browser origin of the frontend service below. Update this if Render
+      # assigns a different subdomain (or if you switch the frontend to Vercel).
       - key: WEB_ORIGIN
-        sync: false
+        value: https://uniformity-web.onrender.com
       - key: CLOUDINARY_CLOUD_NAME
         sync: false
       - key: CLOUDINARY_API_KEY
@@ -49,3 +53,26 @@ services:
         sync: false
       - key: EXPOSE_DEV_OTP
         value: "false"
+
+  # Next.js frontend. Server Components and the /api/* BFF both call the API
+  # above over the public internet, so this is a plain Node web service.
+  - type: web
+    name: uniformity-web
+    runtime: node
+    plan: free
+    rootDir: .
+    # Must match the API service's URL, including the scheme. Render's
+    # `fromService` only exposes the bare host, so it is written out here.
+    # API_URL is read at build time (image rewrites) and at runtime (BFF),
+    # so changing it requires a redeploy.
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    # Static file, so the health check does not depend on the API being awake.
+    healthCheckPath: /health.txt
+    autoDeploy: true
+    envVars:
+      - key: API_URL
+        value: https://uniformity-api.onrender.com
+      # Optional: not read by the app today, kept for parity with the docs.
+      - key: NEXT_PUBLIC_APP_URL
+        value: https://uniformity-web.onrender.com

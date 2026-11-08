@@ -4,14 +4,14 @@ The app deploys as two services plus two external providers:
 
 | Piece        | Host                     | Notes                                        |
 | ------------ | ------------------------ | -------------------------------------------- |
-| Next.js      | Vercel                   | Server Components + `/api/*` BFF             |
+| Next.js      | Vercel or Render         | Server Components + `/api/*` BFF             |
 | Express API  | Render                   | Root directory `api`                         |
 | PostgreSQL   | **Supabase**             | Session pooler connection string, TLS on     |
 | Photos       | Cloudinary               | Signed direct uploads                        |
 | Email        | **Gmail API**            | OAuth2 refresh token with `gmail.send` scope |
 
 ```
-Browser ──► Vercel (Next.js) ──► Render (Express API) ──► Supabase Postgres
+Browser ──► Next.js (Vercel/Render) ──► Render (Express API) ──► Supabase Postgres
                                      │                    Cloudinary
                                      └──────────────────► Gmail API
 ```
@@ -124,7 +124,8 @@ API refuses to boot if `EMAIL_MODE=gmail` is set without all four variables.
 Blueprint or create a web service manually with:
 
 - Root directory: `api`
-- Build command: `npm ci && npm run build`
+- Build command: `npm ci --include=dev && npm run build`
+  (`NODE_ENV=production` makes plain `npm ci` skip TypeScript, which the build needs)
 - Start command: `npm start`
 - Health check path: `/health`
 
@@ -143,7 +144,7 @@ ACCESS_TOKEN_TTL_SECONDS=900
 REFRESH_TOKEN_TTL_DAYS=30
 REFRESH_REUSE_GRACE_SECONDS=30
 BCRYPT_ROUNDS=12
-WEB_ORIGIN=https://<your-app>.vercel.app
+WEB_ORIGIN=https://<your-frontend>
 # COOKIE_DOMAIN=            # leave empty when using the Next.js BFF
 # COOKIE_SECURE=            # defaults to true in production
 OTP_TTL_MINUTES=10
@@ -173,26 +174,46 @@ Notes:
 - `WEB_ORIGIN` only matters for direct browser-to-API calls; normal traffic goes
   through the BFF. List every frontend origin, comma-separated.
 
-## 4. Next.js on Vercel
+## 4. Next.js frontend
+
+The frontend runs either on Vercel (recommended: no cold starts) or as a second
+Render web service from the same `render.yaml` Blueprint.
+
+### Vercel
 
 Import the repository and set:
 
 ```dotenv
 API_URL=https://<your-api>.onrender.com
-NEXT_PUBLIC_APP_URL=https://<your-app>.vercel.app
 ```
 
 `API_URL` is used at build time (rewrites) and runtime (BFF), so redeploy after
 changing it.
 
-The browser only talks to the Vercel origin:
+### Render web service
+
+`render.yaml` already defines `uniformity-web`:
+
+- Root directory: `.`
+- Build command: `npm ci --include=dev && npm run build`
+- Start command: `npm start`
+- Health check path: `/health.txt` (a static file, so the check does not depend
+  on the API being awake)
+- Environment: `API_URL=https://uniformity-api.onrender.com`
+
+If Render assigns a different subdomain to either service, update `API_URL` on
+the frontend and `WEB_ORIGIN` on the API, then redeploy. Free instances sleep
+after 15 minutes idle, so the first request after a pause wakes Next.js and then
+the API (~1–2 minutes).
+
+The browser only talks to the frontend origin either way:
 
 - `/api/*` → BFF proxy → Express
 - `/uploads/*` → rewrite → Express
 
 Because the API's `Set-Cookie` headers are copied by the BFF, the session
-cookies live on the Vercel domain. **No shared parent domain or
-`COOKIE_DOMAIN` is required.**
+cookies live on the frontend domain. **No shared parent domain or
+`COOKIE_DOMAIN` is required**, and no cross-site cookie flags are needed.
 
 ## 5. Smoke test
 
@@ -200,10 +221,10 @@ cookies live on the Vercel domain. **No shared parent domain or
 curl https://<your-api>.onrender.com/health
 # {"status":"ok","db":"up",...}
 
-curl -i https://<your-app>.vercel.app/login
+curl -i https://<your-frontend>/login
 # 200 text/html
 
-curl -i -c cookies.txt -X POST https://<your-app>.vercel.app/api/auth/login \
+curl -i -c cookies.txt -X POST https://<your-frontend>/api/auth/login \
   -H "content-type: application/json" \
   -d '{"email":"you@bicol-u.edu.ph","password":"…"}'
 # 200 + two Set-Cookie headers

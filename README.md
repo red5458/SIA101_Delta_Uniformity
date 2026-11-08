@@ -415,28 +415,45 @@ docs/                         Architecture and deployment notes
 
 ## Deployment
 
-Recommended split:
+Two supported layouts. Both use the same API, database, and integrations:
 
-- **Next.js** → Vercel (set `API_URL` to the Render URL).
-- **Express API** → Render web service (root directory `api`).
 - **PostgreSQL** → **Supabase** (session pooler connection string).
 - **Photos** → Cloudinary.
 - **Email** → **Gmail API** (`EMAIL_MODE=gmail`).
 
-`render.yaml` describes the API service. After the first deploy:
+**Option A — everything on Render.** `render.yaml` defines two web services:
+
+| Service          | Root | Start            | Health        |
+| ---------------- | ---- | ---------------- | ------------- |
+| `uniformity-api` | `api`| `npm start`      | `/health`     |
+| `uniformity-web` | `.`  | `npm start`      | `/health.txt` |
+
+Create a Blueprint from the repository, then fill the `sync: false` variables
+prompted for the API (`DATABASE_URL`, Cloudinary keys, Gmail credentials). The
+API's `WEB_ORIGIN` and the frontend's `API_URL` already point at each other's
+default `onrender.com` URLs; update both if Render assigns different
+subdomains. `API_URL` is read at build time (image rewrites) and at runtime
+(the BFF), so changing it requires a redeploy of `uniformity-web`.
+
+Free instances sleep after 15 minutes of inactivity, so the first request after
+idle waits for Next.js and then the API to wake (~1–2 minutes).
+
+**Option B — Vercel + Render.** Deploy only `uniformity-api` from the
+Blueprint, then import the repository into Vercel with
+`API_URL=https://<api>.onrender.com`. This avoids the cold start.
+
+After the first deploy of either option:
 
 1. Set the API environment variables from `api/.env.example` (`NODE_ENV=production`,
-   `DATABASE_URL` from Supabase, JWT secrets, `WEB_ORIGIN=https://your-app.vercel.app`,
+   `DATABASE_URL` from Supabase, JWT secrets, `WEB_ORIGIN=https://<frontend>`,
    Cloudinary keys, Gmail API credentials). Leave `DATABASE_SSL=auto` and
    `COOKIE_SECURE` unset so TLS and secure cookies default to on.
 2. Run `npm run db:check`, `npm run db:migrate` (and optionally `npm run db:seed`
    and `npm run bootstrap-admin`) against the production database from a local
    machine or a one-off Render shell.
 3. Verify OTP delivery with `npm run email:test -- you@bicol-u.edu.ph`.
-4. Set `API_URL=https://<api>.onrender.com` and
-   `NEXT_PUBLIC_APP_URL=https://<app>.vercel.app` in Vercel.
-5. Because all browser traffic goes through the Next.js BFF, the API cookies are
-   stored on the Vercel origin. No shared parent domain is required.
+4. Because all browser traffic goes through the Next.js BFF, the API cookies are
+   stored on the frontend origin. No shared parent domain is required.
 
 More detail: [`docs/deployment.md`](docs/deployment.md).
 
