@@ -1,7 +1,7 @@
 import "server-only";
 
 import { apiFetch, apiFetchSafe } from "@/lib/api/server";
-import type { Category, FeedFilters, Listing } from "@/types/db";
+import type { Category, FeedFilters, Listing, SellerWishlistSaver } from "@/types/db";
 
 export interface FeedResult {
   listings: Listing[];
@@ -48,6 +48,10 @@ export function getListingById(id: string): Promise<Listing | null> {
 
 export function getSellerListings(): Promise<Listing[]> {
   return apiFetch<Listing[]>("/listings/mine");
+}
+
+export function getSellerWishlistSavers(): Promise<SellerWishlistSaver[]> {
+  return apiFetch<SellerWishlistSaver[]>("/wishlist/seller-savers");
 }
 
 export async function getWishlistIds(): Promise<Set<string>> {

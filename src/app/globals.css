@@ -89,8 +89,30 @@ html[data-theme="dark"] .input {
 }
 
 html[data-theme="dark"] .border-line,
+html[data-theme="dark"] .border-white,
 html[data-theme="dark"] .divide-line > :not([hidden]) ~ :not([hidden]) {
   border-color: #354638 !important;
+}
+
+/*
+ * Soft tinted borders (`border-brand-200`, `border-emerald-200`, …) are pale
+ * pastels meant for a light page. On a dark surface they read as a bright
+ * white outline, which is what made the saved-wishlist pill look harsh.
+ */
+html[data-theme="dark"] .border-brand-100,
+html[data-theme="dark"] .border-brand-200,
+html[data-theme="dark"] .border-emerald-200 {
+  border-color: #3c5c43 !important;
+}
+
+html[data-theme="dark"] .border-gold-200,
+html[data-theme="dark"] .border-gold-300,
+html[data-theme="dark"] .border-amber-200 {
+  border-color: #5c5634 !important;
+}
+
+html[data-theme="dark"] .border-red-200 {
+  border-color: #5d3a38 !important;
 }
 
 html[data-theme="dark"] .text-muted {
@@ -106,30 +128,90 @@ html[data-theme="dark"] .input::placeholder {
   color: #819181 !important;
 }
 
-html[data-theme="dark"] [class*="bg-brand-50"],
-html[data-theme="dark"] [class*="bg-brand-100"] {
+/*
+ * Tinted surfaces use exact selectors on purpose. Substring matching would
+ * also hit `bg-brand-500` / `bg-red-500`, which dulled solid accents like the
+ * unread dot to near-invisible on a dark background.
+ */
+html[data-theme="dark"] .bg-brand-50,
+html[data-theme="dark"] .bg-brand-50\/40,
+html[data-theme="dark"] .bg-brand-50\/50,
+html[data-theme="dark"] .bg-brand-50\/60,
+html[data-theme="dark"] .bg-brand-100,
+html[data-theme="dark"] .bg-brand-200\/40 {
   background-color: #26382a !important;
 }
 
-html[data-theme="dark"] [class*="bg-gold-50"],
-html[data-theme="dark"] [class*="bg-gold-100"] {
+html[data-theme="dark"] .bg-gold-50,
+html[data-theme="dark"] .bg-gold-50\/60,
+html[data-theme="dark"] .bg-gold-100,
+html[data-theme="dark"] .bg-gold-100\/70 {
   background-color: #393721 !important;
 }
 
-html[data-theme="dark"] [class*="bg-red-50"] {
+html[data-theme="dark"] .bg-red-50,
+html[data-theme="dark"] .bg-red-100 {
   background-color: #3b2524 !important;
 }
 
-html[data-theme="dark"] [class*="text-brand-600"],
-html[data-theme="dark"] [class*="text-brand-700"],
-html[data-theme="dark"] [class*="text-brand-800"],
-html[data-theme="dark"] [class*="text-brand-900"] {
+html[data-theme="dark"] .text-brand-600,
+html[data-theme="dark"] .text-brand-700,
+html[data-theme="dark"] .text-brand-800,
+html[data-theme="dark"] .text-brand-900,
+html[data-theme="dark"] .hover\:text-brand-700:hover,
+html[data-theme="dark"] .hover\:text-brand-800:hover,
+html[data-theme="dark"] .hover\:text-brand-900:hover {
   color: #b3dba8 !important;
+}
+
+html[data-theme="dark"] .group:hover .group-hover\:text-brand-700 {
+  color: #b3dba8 !important;
+}
+
+html[data-theme="dark"] .text-emerald-600,
+html[data-theme="dark"] .text-emerald-700 {
+  color: #8fe3b6 !important;
+}
+
+html[data-theme="dark"] .text-amber-700,
+html[data-theme="dark"] .text-gold-700,
+html[data-theme="dark"] .text-gold-800 {
+  color: #eed9a0 !important;
+}
+
+html[data-theme="dark"] .text-red-600,
+html[data-theme="dark"] .text-red-700,
+html[data-theme="dark"] .hover\:text-red-600:hover,
+html[data-theme="dark"] .hover\:text-red-700:hover {
+  color: #fca5a5 !important;
+}
+
+/*
+ * Solid light-gold surfaces (seller avatars, the landing CTA) keep dark text,
+ * otherwise the `.text-brand-900` override above turns light green on gold.
+ */
+html[data-theme="dark"] .bg-gold-200.text-brand-900,
+html[data-theme="dark"] .bg-gold-300.text-brand-900 {
+  color: #173d1c !important;
+}
+
+html[data-theme="dark"] .ring-offset-white {
+  --tw-ring-offset-color: #111a13 !important;
 }
 
 html[data-theme="dark"] .btn-secondary,
 html[data-theme="dark"] .btn-ghost {
   color: #edf4ea !important;
+}
+
+/*
+ * The bell and sign-out controls are `btn-ghost text-muted`, and both rules
+ * use `!important`. Because `.btn-ghost` is declared later it was winning,
+ * turning the soft grey bell icon into near-white.
+ */
+html[data-theme="dark"] .btn-ghost.text-muted,
+html[data-theme="dark"] .btn-secondary.text-muted {
+  color: #aab9aa !important;
 }
 
 html[data-theme="dark"] .btn-secondary:hover,
@@ -143,9 +225,21 @@ html[data-theme="dark"] [class*="hover:bg-white"]:hover {
   color: #edf4ea !important;
 }
 
-html[data-theme="dark"] [class*="hover:bg-brand-50"]:hover,
-html[data-theme="dark"] [class*="hover:bg-brand-100"]:hover {
+html[data-theme="dark"] .hover\:bg-brand-50:hover,
+html[data-theme="dark"] .hover\:bg-brand-50\/40:hover,
+html[data-theme="dark"] .hover\:bg-brand-50\/50:hover,
+html[data-theme="dark"] .hover\:bg-brand-50\/60:hover,
+html[data-theme="dark"] .hover\:bg-brand-100:hover {
   background-color: #2a3a2d !important;
+}
+
+html[data-theme="dark"] .hover\:bg-gold-200:hover {
+  background-color: #4a4526 !important;
+}
+
+html[data-theme="dark"] .hover\:bg-amber-50:hover,
+html[data-theme="dark"] .hover\:bg-emerald-50:hover {
+  background-color: #24412f !important;
 }
 
 html[data-theme="dark"] [class*="hover:bg-red-50"]:hover {
@@ -154,6 +248,44 @@ html[data-theme="dark"] [class*="hover:bg-red-50"]:hover {
 
 html[data-theme="dark"] [class*="hover:text-ink"]:hover {
   color: #edf4ea !important;
+}
+
+/*
+ * Opacity variants (`bg-white/95`) are separate class tokens, so the plain
+ * `.bg-white` rule above never matches them. The wishlist pill and the photo
+ * carousel controls would otherwise stay near-white on a dark page.
+ */
+html[data-theme="dark"] .bg-white\/80,
+html[data-theme="dark"] .bg-white\/90,
+html[data-theme="dark"] .bg-white\/95 {
+  background-color: rgba(27, 39, 30, 0.92) !important;
+}
+
+/* Emerald and amber surfaces used by verified badges and success states. */
+html[data-theme="dark"] .bg-emerald-50 {
+  background-color: #1e3527 !important;
+}
+
+html[data-theme="dark"] .bg-amber-50 {
+  background-color: #3a3221 !important;
+}
+
+/* Sonner toasts use Tailwind's important prefix (`!bg-white`), which is a
+ * different class token from `bg-white`, so they need their own overrides. */
+html[data-theme="dark"] [class*="!bg-white"] {
+  background-color: #1b271e !important;
+}
+
+html[data-theme="dark"] [class*="!text-ink"] {
+  color: #edf4ea !important;
+}
+
+html[data-theme="dark"] [class*="!text-muted"] {
+  color: #aab9aa !important;
+}
+
+html[data-theme="dark"] [class*="!border-line"] {
+  border-color: #354638 !important;
 }
 
 @layer utilities {

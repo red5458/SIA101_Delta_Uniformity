@@ -110,6 +110,18 @@ export interface Comment {
   } | null;
 }
 
+export interface SellerWishlistSaver {
+  wishlist_id: string;
+  listing_id: string;
+  created_at: string;
+  user_id: string;
+  name: string;
+  department: Department | null;
+  program: string | null;
+  year_level: YearLevel | null;
+  avatar_url: string | null;
+}
+
 export type NotificationType =
   | "comment"
   | "reply"
