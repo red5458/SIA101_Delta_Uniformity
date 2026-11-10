@@ -4,9 +4,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   Bell,
+  Bookmark,
   CheckCheck,
   LoaderCircle,
   MessageSquare,
+  MessagesSquare,
   Reply,
   ShieldAlert,
   ShieldCheck,
@@ -22,6 +24,10 @@ function typeIcon(type: Notification["type"]) {
       return <MessageSquare className={className} />;
     case "reply":
       return <Reply className={className} />;
+    case "message":
+      return <MessagesSquare className={className} />;
+    case "wishlist":
+      return <Bookmark className={className} />;
     case "listing_removed":
     case "comment_removed":
       return <Trash2 className={className} />;
@@ -107,15 +113,21 @@ export function NotificationBell({ initialCount = 0 }: { initialCount?: number }
     const onVisible = () => {
       if (document.visibilityState === "visible") void refreshCount();
     };
+    const onNotificationsUpdated = () => {
+      void refreshCount();
+      if (openRef.current) void loadItems();
+    };
     document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("focus", onVisible);
+    window.addEventListener("uniformity:notifications-updated", onNotificationsUpdated);
 
     return () => {
       window.clearInterval(timer);
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("focus", onVisible);
+      window.removeEventListener("uniformity:notifications-updated", onNotificationsUpdated);
     };
-  }, [refreshCount]);
+  }, [refreshCount, loadItems]);
 
   // A Web Push that lands while a tab is open pings the page, so the badge
   // updates immediately instead of waiting for the next poll.

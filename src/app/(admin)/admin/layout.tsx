@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, MessageSquare, Shield, Store, Users } from "lucide-react";
+import { ArrowLeft, MessageSquare, Shield, Store, Trash2, Users } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { requireAdmin } from "@/lib/auth/session";
 import { getUnreadCount } from "@/lib/data/notifications";
@@ -9,6 +9,7 @@ const TABS = [
   { href: "/admin/listings", label: "Listings", icon: Store },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/comments", label: "Comments", icon: MessageSquare },
+  { href: "/admin/account-deletion-requests", label: "Deletion requests", icon: Trash2 },
 ];
 
 export default async function AdminLayout({

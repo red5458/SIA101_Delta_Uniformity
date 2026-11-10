@@ -5,20 +5,29 @@ import { unauthorized } from "../../utils/ApiError";
 import { ok } from "../../utils/http";
 import { REFRESH_COOKIE, clearAuthCookies, setAuthCookies } from "./auth.cookies";
 import {
+  changePasswordSchema,
+  forgotPasswordSchema,
   loginSchema,
   registerSchema,
   resendSchema,
+  resetPasswordSchema,
   verifySchema,
 } from "./auth.schema";
 import {
+  changePassword,
   findUserById,
   login,
   register,
+  requestPasswordReset,
   resendVerification,
+  resetPassword,
   verifyEmailOtp,
 } from "./auth.service";
 import {
   issueSession,
+  getActiveSessions,
+  revokeAllSessions,
+  revokeOtherSessions,
   revokeRefreshToken,
   rotateRefreshToken,
   type SessionMeta,
@@ -80,6 +89,45 @@ export async function loginHandler(req: Request, res: Response) {
     redirect: redirectFor(result.user),
     user: { id: result.user.user_id, email: result.user.email },
   });
+}
+
+export async function forgotPasswordHandler(req: Request, res: Response) {
+  const { email } = forgotPasswordSchema.parse(req.body);
+  return ok(res, await requestPasswordReset(email));
+}
+
+export async function resetPasswordHandler(req: Request, res: Response) {
+  const input = resetPasswordSchema.parse(req.body);
+  await resetPassword(input);
+  clearAuthCookies(res);
+  return ok(res, { reset: true });
+}
+
+export async function changePasswordHandler(req: Request, res: Response) {
+  const user = req.user;
+  if (!user) throw unauthorized();
+  const input = changePasswordSchema.parse(req.body);
+  await changePassword(user, input.currentPassword, input.password);
+  await revokeAllSessions(user.user_id);
+  const tokens = await issueSession(user, meta(req));
+  setAuthCookies(res, tokens);
+  return ok(res, { changed: true });
+}
+
+export async function sessionsHandler(req: Request, res: Response) {
+  const user = req.user;
+  if (!user) throw unauthorized();
+  const refreshToken = req.cookies?.[REFRESH_COOKIE] as string | undefined;
+  return ok(res, await getActiveSessions(user.user_id, refreshToken));
+}
+
+export async function signOutOtherSessionsHandler(req: Request, res: Response) {
+  const user = req.user;
+  if (!user) throw unauthorized();
+  const refreshToken = req.cookies?.[REFRESH_COOKIE] as string | undefined;
+  if (!refreshToken) throw unauthorized("Your current session could not be identified. Sign in again.", "SESSION_MISSING");
+  const revoked = await revokeOtherSessions(user.user_id, refreshToken);
+  return ok(res, { revoked });
 }
 
 export async function refreshHandler(req: Request, res: Response) {

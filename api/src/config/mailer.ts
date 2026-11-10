@@ -235,6 +235,29 @@ export async function sendVerificationEmail(to: string, code: string) {
   });
 }
 
+/** Sends a single-use password reset code. */
+export async function sendPasswordResetEmail(to: string, code: string) {
+  const subject = "Reset your Uniformity password";
+  const text = `Your Uniformity password reset code is ${code}. It expires in ${env.OTP_TTL_MINUTES} minutes. If you did not request this, ignore this message.`;
+  const html = `
+  <div style="font-family:Segoe UI,Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px;color:#1f2937">
+    <h1 style="font-size:20px;margin:0 0 8px">Reset your Uniformity password</h1>
+    <p style="margin:0 0 16px;font-size:14px;color:#4b5563">Enter this 6-digit code to choose a new password. It is single-use and expires in ${env.OTP_TTL_MINUTES} minutes.</p>
+    <p style="font-size:34px;font-weight:700;letter-spacing:8px;margin:24px 0;color:#166534">${code}</p>
+    <p style="margin:24px 0 0;font-size:12px;color:#6b7280">If you did not request this, you can ignore this message.</p>
+  </div>`;
+
+  if (env.EMAIL_MODE === "console") {
+    logger.info({ to, code }, "[email:console] password reset code generated");
+    return;
+  }
+  if (env.EMAIL_MODE === "gmail") {
+    await sendViaGmailApi({ to, subject, text, html });
+    return;
+  }
+  await getTransporter().sendMail({ from: env.MAIL_FROM, to, subject, text, html });
+}
+
 /** Used by `npm run email:test` to fail fast on misconfiguration. */
 export async function verifyEmailTransport(): Promise<string> {
   if (env.EMAIL_MODE === "console") {

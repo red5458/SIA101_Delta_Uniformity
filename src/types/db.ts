@@ -29,6 +29,7 @@ export interface Profile {
   contact_email: string | null;
   contact_mobile: string | null;
   contact_messenger: string | null;
+  show_contact_details: boolean;
   avatar_url: string | null;
   created_at: string;
 }
@@ -124,6 +125,8 @@ export interface SellerWishlistSaver {
 export type NotificationType =
   | "comment"
   | "reply"
+  | "message"
+  | "wishlist"
   | "listing_removed"
   | "comment_removed"
   | "suspended"
@@ -152,6 +155,60 @@ export interface NotificationPage {
   items: Notification[];
   nextCursor: string | null;
   unreadCount: number;
+}
+
+export interface ChatMessage {
+  message_id: string;
+  conversation_id: string;
+  sender_id: string;
+  body: string;
+  created_at: string;
+  read_at: string | null;
+  attachments: ChatAttachment[];
+}
+
+export interface ChatAttachment {
+  attachment_id: string;
+  resource_type: "image" | "video";
+  url: string;
+  file_name: string;
+  content_type: string;
+  file_size: number;
+}
+
+export interface ChatAttachmentInput {
+  url: string;
+  key: string;
+  resourceType: "image" | "video";
+  contentType: string;
+  fileName: string;
+  fileSize: number;
+}
+
+export interface ChatConversationSummary {
+  conversation_id: string;
+  listing_id: string;
+  listing_title: string;
+  listing_status: ListingStatus;
+  other_user: {
+    user_id: string;
+    name: string;
+    program: string | null;
+    department: Department | null;
+    avatar_url: string | null;
+  };
+  last_message: {
+    body: string;
+    sender_id: string;
+    created_at: string;
+  } | null;
+  unread_count: number;
+  updated_at: string;
+}
+
+export interface ChatMessagesPage {
+  items: ChatMessage[];
+  hasMore: boolean;
 }
 
 export interface AdminStats {

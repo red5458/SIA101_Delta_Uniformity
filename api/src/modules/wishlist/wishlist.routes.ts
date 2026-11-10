@@ -8,6 +8,7 @@ import { unauthorized } from "../../utils/ApiError";
 import { asyncHandler, ok } from "../../utils/http";
 import { getWishlistIds } from "../listings/listings.service";
 import {
+  getListingWishlistStudents,
   getSellerWishlistSavers,
   getWishlistListings,
   toggleWishlist,
@@ -43,12 +44,23 @@ async function toggleHandler(req: Request, res: Response) {
   return ok(res, await toggleWishlist(user.user_id, listingId));
 }
 
+async function listingStudentsHandler(req: Request, res: Response) {
+  const user = req.user;
+  if (!user) throw unauthorized();
+  const { listingId } = z.object({ listingId: z.string().uuid() }).parse(req.params);
+  return ok(res, await getListingWishlistStudents(user.user_id, listingId));
+}
+
 export const wishlistRouter = Router();
 
 wishlistRouter.use(authenticate);
 wishlistRouter.get("/", asyncHandler(listHandler));
 wishlistRouter.get("/ids", asyncHandler(idsHandler));
 wishlistRouter.get("/seller-savers", requireActive, asyncHandler(sellerSaversHandler));
+wishlistRouter.get(
+  "/listing/:listingId/students",
+  asyncHandler(listingStudentsHandler),
+);
 wishlistRouter.post(
   "/toggle",
   requireActive,

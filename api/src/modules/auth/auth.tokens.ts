@@ -26,6 +26,15 @@ interface RefreshRow {
   replaced_by: string | null;
 }
 
+export interface ActiveSession {
+  family_id: string;
+  user_agent: string | null;
+  ip: string | null;
+  created_at: string;
+  expires_at: string;
+  current: boolean;
+}
+
 function metaValues(meta: SessionMeta) {
   return {
     userAgent: meta.userAgent?.slice(0, 512) ?? null,
@@ -200,4 +209,45 @@ export async function revokeAllSessions(userId: string) {
       WHERE user_id = $1 AND revoked_at IS NULL`,
     [userId],
   );
+}
+
+export async function getActiveSessions(userId: string, currentRefreshToken?: string): Promise<ActiveSession[]> {
+  const currentFamilyResult = currentRefreshToken
+    ? await query<{ family_id: string }>(
+        `SELECT family_id FROM refresh_tokens WHERE user_id = $1 AND token_hash = $2`,
+        [userId, sha256(currentRefreshToken)],
+      )
+    : { rows: [] as { family_id: string }[] };
+  const currentFamily = currentFamilyResult.rows[0]?.family_id ?? null;
+  const { rows } = await query<Omit<ActiveSession, "created_at" | "expires_at"> & { created_at: Date | string; expires_at: Date | string }>(
+    `SELECT DISTINCT ON (family_id)
+            family_id,
+            user_agent,
+            ip,
+            created_at,
+            expires_at,
+            (family_id = $2) AS current
+       FROM refresh_tokens
+      WHERE user_id = $1 AND revoked_at IS NULL AND expires_at > now()
+      ORDER BY family_id, created_at DESC`,
+    [userId, currentFamily],
+  );
+  return rows
+    .map((row) => ({ ...row, created_at: new Date(row.created_at).toISOString(), expires_at: new Date(row.expires_at).toISOString() }))
+    .sort((a, b) => Number(b.current) - Number(a.current) || b.created_at.localeCompare(a.created_at));
+}
+
+export async function revokeOtherSessions(userId: string, currentRefreshToken: string) {
+  const current = await query<{ family_id: string }>(
+    `SELECT family_id FROM refresh_tokens WHERE user_id = $1 AND token_hash = $2 AND revoked_at IS NULL`,
+    [userId, sha256(currentRefreshToken)],
+  );
+  const currentFamily = current.rows[0]?.family_id;
+  if (!currentFamily) throw unauthorized("Your current session could not be identified. Sign in again.", "SESSION_MISSING");
+  const result = await query(
+    `UPDATE refresh_tokens SET revoked_at = now()
+      WHERE user_id = $1 AND family_id <> $2 AND revoked_at IS NULL`,
+    [userId, currentFamily],
+  );
+  return result.rowCount ?? 0;
 }

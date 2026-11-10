@@ -48,8 +48,13 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={poppins.variable}>
+    <html lang="en" className={poppins.variable} suppressHydrationWarning>
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{const r=document.documentElement;const a=localStorage.getItem('uniformity:appearance')||'system';const d=window.matchMedia('(prefers-color-scheme: dark)').matches;r.dataset.theme=a==='system'?(d?'dark':'light'):a;r.dataset.textSize=localStorage.getItem('uniformity:text-size')||'normal';r.dataset.reduceMotion=localStorage.getItem('uniformity:reduce-motion')||'false'}catch{}`,
+          }}
+        />
         <link rel="preconnect" href="https://res.cloudinary.com" crossOrigin="" />
         <link rel="dns-prefetch" href="https://res.cloudinary.com" />
       </head>

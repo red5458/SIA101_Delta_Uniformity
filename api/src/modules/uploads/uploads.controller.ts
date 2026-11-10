@@ -13,9 +13,11 @@ import {
 import { ApiError, unauthorized } from "../../utils/ApiError";
 import { ok } from "../../utils/http";
 
-const ALLOWED_FORMATS = ["jpg", "jpeg", "png", "webp", "avif"];
+const IMAGE_FORMATS = ["jpg", "jpeg", "png", "webp", "avif"];
+const VIDEO_FORMATS = ["mp4", "mov", "webm"];
 
 export const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+export const MAX_CHAT_VIDEO_BYTES = 25 * 1024 * 1024;
 
 function safeBaseName(name: string) {
   return (
@@ -28,14 +30,29 @@ function safeBaseName(name: string) {
   );
 }
 
-function extensionFor(file: Express.Multer.File) {
+function extensionFor(file: Express.Multer.File, resourceType: "image" | "video") {
+  const formats = resourceType === "video" ? VIDEO_FORMATS : IMAGE_FORMATS;
   const fromName = path.extname(file.originalname).slice(1).toLowerCase();
-  if (ALLOWED_FORMATS.includes(fromName)) return fromName === "jpeg" ? "jpg" : fromName;
+  if (formats.includes(fromName)) return fromName === "jpeg" ? "jpg" : fromName;
 
   const fromMime = file.mimetype.split("/")[1]?.toLowerCase();
   if (fromMime === "jpeg") return "jpg";
-  if (fromMime && ALLOWED_FORMATS.includes(fromMime)) return fromMime;
-  return "jpg";
+  if (fromMime === "quicktime") return "mov";
+  if (fromMime && formats.includes(fromMime)) return fromMime;
+  return resourceType === "video" ? "mp4" : "jpg";
+}
+
+function resourceTypeFrom(value: unknown): "image" | "video" {
+  if (value === undefined || value === "image") return "image";
+  if (value === "video") return "video";
+  throw new ApiError(422, "Only image and video attachments are supported.", "INVALID_TYPE");
+}
+
+function fileForRequest(req: Request) {
+  if (req.file) return req.file;
+  const files = req.files;
+  if (Array.isArray(files)) return files[0];
+  return files?.file?.[0] ?? files?.photo?.[0];
 }
 
 /**
@@ -49,13 +66,17 @@ function extensionFor(file: Express.Multer.File) {
 export async function signatureHandler(req: Request, res: Response) {
   const user = req.user;
   if (!user) throw unauthorized();
+  const resourceType = resourceTypeFrom(req.body?.resourceType);
+  const maxBytes = resourceType === "video" ? MAX_CHAT_VIDEO_BYTES : MAX_PHOTO_BYTES;
+  const allowedFormats = resourceType === "video" ? VIDEO_FORMATS : IMAGE_FORMATS;
 
   if (env.uploadDriver === "local") {
     return ok(res, {
       driver: "local",
       uploadUrl: "/api/uploads/direct",
-      maxBytes: MAX_PHOTO_BYTES,
-      allowedFormats: ALLOWED_FORMATS,
+      maxBytes,
+      allowedFormats,
+      resourceType,
     });
   }
 
@@ -86,16 +107,21 @@ export async function signatureHandler(req: Request, res: Response) {
     signature,
     folder,
     publicId,
-    uploadUrl: `https://api.cloudinary.com/v1_1/${env.CLOUDINARY_CLOUD_NAME}/image/upload`,
-    maxBytes: MAX_PHOTO_BYTES,
-    allowedFormats: ALLOWED_FORMATS,
+    uploadUrl: `https://api.cloudinary.com/v1_1/${env.CLOUDINARY_CLOUD_NAME}/${resourceType}/upload`,
+    maxBytes,
+    allowedFormats,
+    resourceType,
   });
 }
 
 /** Development-only disk storage. Never used when Cloudinary is configured. */
-async function storeLocally(userId: string, file: Express.Multer.File) {
+async function storeLocally(
+  userId: string,
+  file: Express.Multer.File,
+  resourceType: "image" | "video",
+) {
   const directory = path.join(localUploadsDir(), userId);
-  const fileName = `${Date.now()}-${randomUUID().slice(0, 8)}.${extensionFor(file)}`;
+  const fileName = `${Date.now()}-${randomUUID().slice(0, 8)}.${extensionFor(file, resourceType)}`;
 
   await mkdir(directory, { recursive: true });
   await writeFile(path.join(directory, fileName), file.buffer);
@@ -115,21 +141,29 @@ export async function directUploadHandler(req: Request, res: Response) {
   const user = req.user;
   if (!user) throw unauthorized();
 
-  const file = req.file;
-  if (!file) throw new ApiError(422, "Attach an image in the photo field.", "NO_FILE");
-  if (!file.mimetype.startsWith("image/")) {
-    throw new ApiError(422, "Only image files are accepted.", "INVALID_TYPE");
+  const file = fileForRequest(req);
+  if (!file) throw new ApiError(422, "Attach a file to upload.", "NO_FILE");
+  const resourceType = resourceTypeFrom(req.body?.resourceType);
+  const maxBytes = resourceType === "video" ? MAX_CHAT_VIDEO_BYTES : MAX_PHOTO_BYTES;
+  const allowedFormats = resourceType === "video" ? VIDEO_FORMATS : IMAGE_FORMATS;
+  const expectedMime = resourceType === "video" ? "video/" : "image/";
+  const extension = path.extname(file.originalname).slice(1).toLowerCase();
+  if (!file.mimetype.startsWith(expectedMime) || !allowedFormats.includes(extension)) {
+    throw new ApiError(422, `Choose a supported ${resourceType} file.`, "INVALID_TYPE");
+  }
+  if (file.size > maxBytes) {
+    throw new ApiError(413, `The ${resourceType} is larger than the upload limit.`, "FILE_TOO_LARGE");
   }
 
   if (env.uploadDriver === "local") {
-    const stored = await storeLocally(user.user_id, file);
-    return ok(res, { ...stored, position: 0 });
+    const stored = await storeLocally(user.user_id, file, resourceType);
+    return ok(res, { ...stored, position: 0, resourceType });
   }
 
   if (!cloudinaryConfigured()) {
     throw new ApiError(
       503,
-      "Photo uploads are not configured yet.",
+      "Media uploads are not configured yet.",
       "UPLOADS_DISABLED",
     );
   }
@@ -140,7 +174,7 @@ export async function directUploadHandler(req: Request, res: Response) {
   const result = await new Promise<{ secure_url: string; public_id: string }>(
     (resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
-        { folder, resource_type: "image", allowed_formats: ALLOWED_FORMATS },
+        { folder, resource_type: resourceType, allowed_formats: allowedFormats },
         (error, uploaded) => {
           if (error || !uploaded) {
             reject(error ?? new Error("Cloudinary upload failed"));
@@ -160,5 +194,6 @@ export async function directUploadHandler(req: Request, res: Response) {
     url: result.secure_url,
     key: result.public_id,
     position: 0,
+    resourceType,
   });
 }

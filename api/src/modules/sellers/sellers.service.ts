@@ -24,9 +24,9 @@ export async function getSellerPage(userId: string): Promise<SellerPage | null> 
             program,
             year_level,
             department,
-            contact_email,
-            contact_mobile,
-            contact_messenger,
+            CASE WHEN show_contact_details THEN contact_email ELSE NULL END AS contact_email,
+            CASE WHEN show_contact_details THEN contact_mobile ELSE NULL END AS contact_mobile,
+            CASE WHEN show_contact_details THEN contact_messenger ELSE NULL END AS contact_messenger,
             avatar_url,
             is_verified,
             created_at

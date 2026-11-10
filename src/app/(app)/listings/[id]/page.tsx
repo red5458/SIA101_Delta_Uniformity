@@ -9,8 +9,10 @@ import {
   Shirt,
 } from "lucide-react";
 import { CommentThread } from "@/components/comments/comment-thread";
+import { StartConversationButton } from "@/components/chat/start-conversation-button";
 import { PhotoCarousel } from "@/components/listings/photo-carousel";
 import { WishlistButton } from "@/components/listings/wishlist-button";
+import { WishlistStudentsDropdown } from "@/components/listings/wishlist-students-dropdown";
 import { SellerCard } from "@/components/sellers/seller-card";
 import { requireVerifiedUser } from "@/lib/auth/session";
 import { getComments, isWishlisted } from "@/lib/data/comments";
@@ -89,7 +91,7 @@ export default async function ListingDetailPage({
               <span>Listed {formatDate(listing.created_at)}</span>
             </div>
 
-            <div className="mt-4 flex items-center justify-between gap-3 border-y border-line py-3">
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-y border-line py-3">
               <p className="text-2xl font-bold text-brand-800">
                 {formatPrice(listing.price)}
               </p>
@@ -99,7 +101,12 @@ export default async function ListingDetailPage({
                   Edit listing
                 </Link>
               ) : (
-                <WishlistButton listingId={listing.listing_id} initial={saved} />
+                <div className="flex items-center gap-2">
+                  {listing.status === "Active" && (
+                    <StartConversationButton listingId={listing.listing_id} />
+                  )}
+                  <WishlistButton listingId={listing.listing_id} initial={saved} compact />
+                </div>
               )}
             </div>
 
@@ -124,10 +131,13 @@ export default async function ListingDetailPage({
             </div>
 
             {isOwner && (
-              <p className="mt-4 flex items-center gap-2 rounded-xl border border-gold-200 bg-gold-50 px-3 py-2 text-xs text-brand-900">
-                <BadgeCheck className="h-4 w-4" />
-                This is your listing. Buyers will see your verified seller card below.
-              </p>
+              <>
+                <p className="mt-4 flex items-center gap-2 rounded-xl border border-gold-200 bg-gold-50 px-3 py-2 text-xs text-brand-900">
+                  <BadgeCheck className="h-4 w-4" />
+                  This is your listing. Buyers will see your verified seller card below.
+                </p>
+                <WishlistStudentsDropdown listingId={listing.listing_id} />
+              </>
             )}
           </div>
 
