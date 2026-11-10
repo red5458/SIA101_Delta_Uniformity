@@ -299,7 +299,11 @@ export function CommentThread({
     try {
       const response = await fetch(`/api/comments/${commentId}`, { method: "DELETE" });
       if (!response.ok) throw new Error("Could not delete comment");
-      setComments((prev) => prev.filter((comment) => comment.comment_id !== commentId));
+      // Deleting a parent comment also cascades through its replies in the DB;
+      // remove those from local state immediately so they disappear with it.
+      setComments((prev) => prev.filter(
+        (comment) => comment.comment_id !== commentId && comment.parent_id !== commentId,
+      ));
       setCommentToDelete(null);
       toast.success("Comment removed");
     } catch (error) {
