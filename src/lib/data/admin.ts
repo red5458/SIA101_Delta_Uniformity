@@ -36,14 +36,6 @@ export interface AdminCommentRow {
   listing: { title: string } | null;
 }
 
-export interface AccountDeletionRequestRow {
-  request_id: string;
-  user_id: string;
-  name: string;
-  email: string;
-  requested_at: string;
-}
-
 export function getAdminStats(): Promise<AdminStats> {
   return apiFetch<AdminStats>("/admin/stats");
 }
@@ -58,8 +50,4 @@ export function listAdminUsers(): Promise<AdminUserRow[]> {
 
 export function listAdminComments(): Promise<AdminCommentRow[]> {
   return apiFetch<AdminCommentRow[]>("/admin/comments");
-}
-
-export function listAccountDeletionRequests(): Promise<AccountDeletionRequestRow[]> {
-  return apiFetch<AccountDeletionRequestRow[]>("/admin/account-deletion-requests");
 }

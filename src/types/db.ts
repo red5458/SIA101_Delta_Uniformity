@@ -31,6 +31,7 @@ export interface Profile {
   contact_messenger: string | null;
   show_contact_details: boolean;
   avatar_url: string | null;
+  onboarding_completed_at: string | null;
   created_at: string;
 }
 

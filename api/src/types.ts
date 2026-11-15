@@ -33,6 +33,7 @@ export interface UserRow {
   contact_messenger: string | null;
   show_contact_details: boolean;
   avatar_url: string | null;
+  onboarding_completed_at: Date | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -52,6 +53,7 @@ export interface Profile {
   contact_messenger: string | null;
   show_contact_details: boolean;
   avatar_url: string | null;
+  onboarding_completed_at: string | null;
   created_at: string;
 }
 
@@ -187,6 +189,9 @@ export function toProfile(user: UserRow): Profile {
     contact_messenger: user.contact_messenger,
     show_contact_details: user.show_contact_details,
     avatar_url: user.avatar_url,
+    onboarding_completed_at: user.onboarding_completed_at
+      ? user.onboarding_completed_at.toISOString()
+      : null,
     created_at: user.created_at.toISOString(),
   };
 }

@@ -3,7 +3,9 @@ import { query } from "../../config/db";
 import { toProfile, type UserRow } from "../../types";
 import { unauthorized } from "../../utils/ApiError";
 import { ok } from "../../utils/http";
-import { profileSchema } from "./profile.schema";
+import { clearAuthCookies } from "../auth/auth.cookies";
+import { deleteAccountSchema, onboardingSchema, profileSchema } from "./profile.schema";
+import { deleteAccount } from "./profile.service";
 import { z } from "zod";
 
 export async function updateProfile(req: Request, res: Response) {
@@ -46,37 +48,30 @@ export async function updateContactVisibility(req: Request, res: Response) {
   return ok(res, { showContactDetails });
 }
 
-export async function getDeletionRequest(req: Request, res: Response) {
+export async function updateOnboarding(req: Request, res: Response) {
   const current = req.user;
   if (!current) throw unauthorized();
-  const { rows } = await query<{ request_id: string; status: string; requested_at: Date | string }>(
-    `SELECT request_id, status, requested_at FROM account_deletion_requests
-      WHERE user_id = $1 AND status = 'pending' ORDER BY requested_at DESC LIMIT 1`,
-    [current.user_id],
+  const { completed } = onboardingSchema.parse(req.body);
+
+  const { rows } = await query<UserRow>(
+    `UPDATE users
+        SET onboarding_completed_at = CASE WHEN $2 THEN now() ELSE NULL END,
+            updated_at = now()
+      WHERE user_id = $1
+      RETURNING *`,
+    [current.user_id, completed],
   );
-  const request = rows[0];
-  return ok(res, request ? { ...request, requested_at: new Date(request.requested_at).toISOString() } : null);
+
+  return ok(res, { profile: toProfile(rows[0]!) });
 }
 
-export async function requestDeletion(req: Request, res: Response) {
+export async function deleteAccountHandler(req: Request, res: Response) {
   const current = req.user;
   if (!current) throw unauthorized();
-  await query(
-    `INSERT INTO account_deletion_requests (user_id)
-     VALUES ($1)
-     ON CONFLICT DO NOTHING`,
-    [current.user_id],
-  );
-  return getDeletionRequest(req, res);
-}
+  const { password } = deleteAccountSchema.parse(req.body);
 
-export async function cancelDeletionRequest(req: Request, res: Response) {
-  const current = req.user;
-  if (!current) throw unauthorized();
-  await query(
-    `UPDATE account_deletion_requests SET status = 'cancelled', resolved_at = now()
-      WHERE user_id = $1 AND status = 'pending'`,
-    [current.user_id],
-  );
-  return ok(res, { cancelled: true });
+  await deleteAccount(current, password);
+  clearAuthCookies(res);
+
+  return ok(res, { deleted: true });
 }

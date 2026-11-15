@@ -1,10 +1,11 @@
-import { unlink } from "node:fs/promises";
+import { rm, unlink } from "node:fs/promises";
 import path from "node:path";
 import { v2 as cloudinary } from "cloudinary";
 import {
   cloudinaryConfig,
   cloudinaryConfigured,
   localUploadsDir,
+  userUploadFolder,
 } from "../../config/cloudinary";
 import { env } from "../../config/env";
 import { logger } from "../../config/logger";
@@ -60,4 +61,42 @@ export async function destroyLocalAssets(keys: string[]) {
 
 export async function destroyStoredAssets(keys: string[]) {
   await Promise.all([destroyCloudinaryAssets(keys), destroyLocalAssets(keys)]);
+}
+
+/**
+ * Erases every upload a student owns, including files whose database rows are
+ * already gone. Uploads are always scoped to `uniformity/<userId>` (Cloudinary)
+ * or `uploads/<userId>` (local development), so the folder is the complete
+ * record and no orphaned media is left behind after account deletion.
+ */
+export async function destroyUserUploads(userId: string) {
+  const folder = userUploadFolder(userId);
+
+  if (cloudinaryConfigured()) {
+    cloudinary.config(cloudinaryConfig());
+    for (const resourceType of ["image", "video"] as const) {
+      await cloudinary.api
+        .delete_resources_by_prefix(folder, {
+          resource_type: resourceType,
+          invalidate: true,
+        })
+        .catch((error) => {
+          logger.warn(
+            { err: error, folder, resourceType },
+            "Cloudinary account cleanup failed",
+          );
+        });
+    }
+  }
+
+  if (env.uploadDriver !== "local") return;
+
+  const root = path.resolve(localUploadsDir());
+  const target = path.resolve(root, userId);
+  // Never recurse outside the uploads folder, even with a malformed id.
+  if (!target.startsWith(root + path.sep)) return;
+
+  await rm(target, { recursive: true, force: true }).catch(() => {
+    // Already gone — nothing to clean up.
+  });
 }

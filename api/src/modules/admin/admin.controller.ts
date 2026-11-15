@@ -10,7 +10,6 @@ import {
   listAdminComments,
   listAdminListings,
   listAdminUsers,
-  listAccountDeletionRequests,
   setUserSuspension,
 } from "./admin.service";
 
@@ -39,11 +38,6 @@ export async function usersHandler(req: Request, res: Response) {
 export async function commentsHandler(req: Request, res: Response) {
   admin(req);
   return ok(res, await listAdminComments());
-}
-
-export async function accountDeletionRequestsHandler(req: Request, res: Response) {
-  admin(req);
-  return ok(res, await listAccountDeletionRequests());
 }
 
 export async function deleteListingHandler(req: Request, res: Response) {

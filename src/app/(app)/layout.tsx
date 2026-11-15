@@ -1,5 +1,6 @@
 import { Header } from "@/components/layout/header";
 import { MobileNav } from "@/components/layout/mobile-nav";
+import { WelcomeTour } from "@/components/onboarding/welcome-tour";
 import { requireVerifiedUser } from "@/lib/auth/session";
 import { getUnreadCount } from "@/lib/data/notifications";
 
@@ -20,6 +21,10 @@ export default async function AppLayout({
         {children}
       </main>
       <MobileNav />
+      <WelcomeTour
+        name={session.profile.name}
+        completedAt={session.profile.onboarding_completed_at}
+      />
     </div>
   );
 }

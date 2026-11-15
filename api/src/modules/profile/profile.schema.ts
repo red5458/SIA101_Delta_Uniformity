@@ -11,4 +11,12 @@ export const profileSchema = z.object({
   contactMessenger: z.string().trim().max(120).optional().or(z.literal("")),
 });
 
-export type ProfileInput = z.infer<typeof profileSchema>;
+/** `completed: false` replays the tour; `true` marks it as seen. */
+export const onboardingSchema = z.object({
+  completed: z.boolean(),
+});
+
+/** Re-authenticates the destructive self-service account deletion. */
+export const deleteAccountSchema = z.object({
+  password: z.string().min(1, "Enter your password to continue."),
+});

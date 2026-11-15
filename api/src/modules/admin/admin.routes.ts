@@ -4,7 +4,6 @@ import { requireAdmin } from "../../middleware/require";
 import { asyncHandler } from "../../utils/http";
 import {
   commentsHandler,
-  accountDeletionRequestsHandler,
   deleteCommentHandler,
   deleteListingHandler,
   listingsHandler,
@@ -23,5 +22,4 @@ adminRouter.delete("/listings/:id", asyncHandler(deleteListingHandler));
 adminRouter.get("/users", asyncHandler(usersHandler));
 adminRouter.post("/users/:id/suspend", asyncHandler(suspendHandler));
 adminRouter.get("/comments", asyncHandler(commentsHandler));
-adminRouter.get("/account-deletion-requests", asyncHandler(accountDeletionRequestsHandler));
 adminRouter.delete("/comments/:id", asyncHandler(deleteCommentHandler));

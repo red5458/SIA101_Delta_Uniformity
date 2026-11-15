@@ -7,6 +7,10 @@ import {
 } from "../src/modules/auth/auth.schema";
 import { commentSchema } from "../src/modules/comments/comments.schema";
 import {
+  deleteAccountSchema,
+  onboardingSchema,
+} from "../src/modules/profile/profile.schema";
+import {
   listingPhotoSchema,
   listingSchema,
 } from "../src/modules/listings/listings.schema";
@@ -161,6 +165,26 @@ describe("listingSchema", () => {
     expect(
       listingSchema.safeParse({ ...validListing, department: "LAW" }).success,
     ).toBe(false);
+  });
+});
+
+describe("onboardingSchema", () => {
+  it("accepts marking the tour completed or replaying it", () => {
+    expect(onboardingSchema.safeParse({ completed: true }).success).toBe(true);
+    expect(onboardingSchema.safeParse({ completed: false }).success).toBe(true);
+  });
+
+  it("rejects a missing or non-boolean flag", () => {
+    expect(onboardingSchema.safeParse({}).success).toBe(false);
+    expect(onboardingSchema.safeParse({ completed: "yes" }).success).toBe(false);
+  });
+});
+
+describe("deleteAccountSchema", () => {
+  it("requires the current password", () => {
+    expect(deleteAccountSchema.safeParse({ password: "correct-horse" }).success).toBe(true);
+    expect(deleteAccountSchema.safeParse({ password: "" }).success).toBe(false);
+    expect(deleteAccountSchema.safeParse({}).success).toBe(false);
   });
 });
 

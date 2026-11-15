@@ -1,5 +1,6 @@
-import { BellRing, Eye, KeyRound, Palette, Settings2, ShieldCheck } from "lucide-react";
+import { BellRing, Eye, KeyRound, Palette, Settings2, ShieldCheck, Sparkles } from "lucide-react";
 import { ChangePasswordForm } from "@/components/auth/change-password-form";
+import { TourSettings } from "@/components/onboarding/tour-settings";
 import { PushToggle } from "@/components/notifications/push-toggle";
 import { AccountActions } from "@/components/settings/account-actions";
 import { ActiveSessions } from "@/components/settings/active-sessions";
@@ -25,6 +26,13 @@ export default async function SettingsPage() {
           <BellRing className="h-4 w-4 text-brand-600" /> Notifications
         </h2>
         <PushToggle />
+      </section>
+
+      <section className="mt-5" aria-labelledby="help-settings-heading">
+        <h2 id="help-settings-heading" className="mb-2 flex items-center gap-2 text-sm font-semibold text-ink">
+          <Sparkles className="h-4 w-4 text-brand-600" /> Getting started
+        </h2>
+        <TourSettings />
       </section>
 
       <section className="mt-5" aria-labelledby="security-settings-heading">
