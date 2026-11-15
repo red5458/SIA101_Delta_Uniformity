@@ -1,6 +1,6 @@
 import { query } from "../../config/db";
 import type { Listing } from "../../types";
-import { badRequest, forbidden, notFound } from "../../utils/ApiError";
+import { forbidden, notFound } from "../../utils/ApiError";
 import { getListingsByIds } from "../listings/listings.service";
 import { createNotification } from "../notifications/notifications.service";
 
@@ -162,11 +162,4 @@ export async function toggleWishlist(userId: string, listingId: string) {
   }
 
   return { wishlisted: true };
-}
-
-export function assertListingId(value: unknown): string {
-  if (typeof value !== "string" || !/^[0-9a-f-]{36}$/i.test(value)) {
-    throw badRequest("Invalid listing id", "INVALID_ID");
-  }
-  return value;
 }

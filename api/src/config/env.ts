@@ -256,5 +256,3 @@ export const env = {
   exposeDevOtp:
     raw.EXPOSE_DEV_OTP && raw.NODE_ENV !== "production",
 };
-
-export type Env = typeof env;

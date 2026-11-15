@@ -111,10 +111,6 @@ export const SIZES: ListingSize[] = ["S", "M", "L", "XL", "N/A"];
 
 export const ITEM_TYPES = ["Uniform", "Equipment"] as const;
 
-export const EMAIL_DOMAIN = "@bicol-u.edu.ph";
-export const EMAIL_REGEX = /^[A-Za-z0-9._%+\-]+@bicol-u\.edu\.ph$/;
-
-export const PHOTO_BUCKET = "listing-photos";
 export const MAX_PHOTOS = 6;
 export const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 

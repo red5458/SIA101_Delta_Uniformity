@@ -47,7 +47,3 @@ export function initials(name: string) {
     .map((part) => part[0]?.toUpperCase() ?? "")
     .join("");
 }
-
-export function firstError(error: { message?: string } | null | undefined) {
-  return error?.message ?? "Something went wrong. Please try again.";
-}

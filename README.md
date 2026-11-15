@@ -88,7 +88,7 @@ auth design, and layer breakdown.
 | Styling        | Tailwind CSS 3.4, Lucide icons, Sonner                       |
 | Fonts          | Poppins via `next/font` (self-hosted, preloaded)             |
 | API            | Express 5 + TypeScript, Zod validation, Pino logging          |
-| Database       | PostgreSQL 15+ on Supabase, `pg`, SQL migrations, triggers   |
+| Database       | PostgreSQL 15+ on Supabase, `pg`, triggers                   |
 | Auth           | `jsonwebtoken` access tokens + opaque rotating refresh tokens |
 | Passwords      | `bcryptjs`, cost 12                                          |
 | Media          | Cloudinary signed direct uploads (`multer` memory fallback)  |
@@ -186,11 +186,10 @@ disk under `public/uploads/<userId>/`. Set the three `CLOUDINARY_*` keys (and
 `UPLOAD_DRIVER=cloudinary` if you want to force it) for the real signed-upload
 path.
 
-### 4. Migrate, seed, and create an admin
+### 4. Seed and create an admin
 
 ```bash
 npm run db:check       # verify the connection first
-npm run db:migrate     # api/migrations/001_init.sql
 npm run db:seed        # categories
 ADMIN_EMAIL=you@bicol-u.edu.ph ADMIN_PASSWORD='strong-password' ADMIN_NAME='Your Name' npm run bootstrap-admin
 ```
@@ -330,7 +329,7 @@ still the local placeholder.
 | `refresh_tokens` | Hashed refresh tokens with family, expiry, and rotation metadata      |
 | `email_verification_codes` | Hashed OTPs with expiry, attempts, and cooldown   |
 
-The schema lives in [`api/migrations/001_init.sql`](api/migrations/001_init.sql).
+The schema lives in the Supabase project's `public` schema.
 Triggers keep `updated_at` fresh, and constraints enforce the no-cart rules
 (unique wishlist entries, one OTP per user, cascade deletes).
 
@@ -404,7 +403,6 @@ Pages: `/`, `/login`, `/register`, `/verify-email`, `/complete-profile`,
 
 ```
 api/
-  migrations/001_init.sql     Schema, triggers, constraints, category seed
   src/app.ts                  Express app wiring
   src/config/                 Env validation, pg pool, logger, Cloudinary
   src/middleware/             Auth, active-user guard, rate limits, errors
@@ -416,7 +414,7 @@ api/
   src/modules/notifications/  Bell, push subscriptions, VAPID delivery
   src/modules/uploads/        Cloudinary signature + multipart fallback
   src/modules/admin/          Moderation endpoints
-  src/db/                     Migration runner and seed
+  src/db/                     Category seed
   src/scripts/                Admin bootstrap, db:check, email:test, push:keys
 src/app/(auth)/               Login, register, verify-email
 src/app/(app)/                Authenticated marketplace pages
@@ -472,9 +470,8 @@ After the first deploy of either option:
    `DATABASE_URL` from Supabase, JWT secrets, `WEB_ORIGIN=https://<frontend>`,
    Cloudinary keys, Gmail API credentials, VAPID keys). Leave `DATABASE_SSL=auto`
    and `COOKIE_SECURE` unset so TLS and secure cookies default to on.
-2. Run `npm run db:check`, `npm run db:migrate` (applies `001`–`005`, including
-   notifications and push subscriptions) and optionally `npm run db:seed`
-   and `npm run bootstrap-admin` against the production database from a local
+2. Run `npm run db:check`, then optionally `npm run db:seed` and
+   `npm run bootstrap-admin` against the production database from a local
    machine or a one-off Render shell.
 3. Verify OTP delivery with `npm run email:test -- you@bicol-u.edu.ph`.
 4. Because all browser traffic goes through the Next.js BFF, the API cookies are
@@ -496,8 +493,8 @@ More detail: [`docs/deployment.md`](docs/deployment.md).
 - Supabase free-tier projects pause after a week of inactivity; the API will log
   connection errors and `/health` returns `503` until the project resumes.
 - `npm run db:check` is the first thing to run when a database change does not
-  behave as expected — it reports provider, host, TLS mode, migrations and row
+  behave as expected — it reports provider, host, TLS mode, table and row
   counts without printing the password.
 - The imported development accounts (`admin@bicol-u.edu.ph` and the sample
-  student) use placeholder passwords from the migration run. Rotate them or
-  delete them before deploying.
+  student) use placeholder passwords from the original database import. Rotate
+  them or delete them before deploying.

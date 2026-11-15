@@ -29,18 +29,16 @@ Browser ──► Next.js (Vercel/Render) ──► Render (Express API) ──�
 
    Why the session pooler: the free plan resolves `db.<ref>.supabase.co` to
    IPv6 only, which many CI machines and Render instances cannot reach. Session
-   mode keeps a stable connection, so the migration runner's `BEGIN`/`COMMIT`
-   and the API's long-lived pool both work.
+   mode keeps a stable connection for the API's long-lived pool.
 4. URL-encode special characters in the password before putting it in the URL:
    `@` → `%40`, `:` → `%3A`, `/` → `%2F`, `#` → `%23`, `?` → `%3F`.
-5. Nothing needs to be created manually. The migrations create every table,
-   index, trigger and constraint in the `public` schema.
+5. The Uniformity tables already exist in this project, so no schema setup is
+   needed. `npm run db:check` verifies the connection and prints the table count.
 
-Apply the schema, seed categories, and create the first admin:
+Verify the connection, seed categories, and create the first admin:
 
 ```bash
 npm run db:check        # provider, host, TLS, tables (no password printed)
-npm run db:migrate      # api/migrations/001_init.sql
 npm run db:seed         # 5 categories
 ADMIN_EMAIL=you@bicol-u.edu.ph \
   ADMIN_PASSWORD='strong-password' \
@@ -50,14 +48,11 @@ ADMIN_EMAIL=you@bicol-u.edu.ph \
 
 Run these from the repository root with the **same `DATABASE_URL`** the API will
 use. `DATABASE_SSL=auto` (the default) turns TLS on for Supabase automatically.
-If the pooler rejects DDL with a prepared-statement or permission error, switch
-to the direct connection string for migrations only, then switch back.
 
-Useful checks:
+Useful check:
 
 ```sql
 select count(*) from users;
-select name, applied_at from schema_migrations;
 ```
 
 ## 2. Gmail API for OTP email

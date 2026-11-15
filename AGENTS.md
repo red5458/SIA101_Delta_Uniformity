@@ -16,9 +16,8 @@ database client back into the frontend.
   `*.schema.ts`. Cross-cutting code lives in `api/src/config`,
   `api/src/middleware`, and `api/src/utils`.
 - **Database:** PostgreSQL on Supabase (session pooler). `DATABASE_SSL=auto`
-  enables TLS for Supabase and `sslmode=require` URLs. The authoritative schema
-  is `api/migrations/001_init.sql`; run `npm run db:check`, `npm run db:migrate`,
-  and `npm run db:seed`.
+  enables TLS for Supabase and `sslmode=require` URLs. The schema is maintained
+  in the Supabase project itself; run `npm run db:check` and `npm run db:seed`.
 - **Auth:** 15-minute access JWT + 30-day rotating hashed refresh token
   (`refresh_tokens` family replay detection). Cookies are `HttpOnly`; the proxy
   (`src/proxy.ts`) refreshes silently before Server Components run.
@@ -43,7 +42,6 @@ database client back into the frontend.
 npm run api:dev        # Express API on :4000
 npm run dev            # Next.js on :3000
 npm run db:check       # connection + schema diagnostic (safe)
-npm run db:migrate     # apply SQL migrations
 npm run db:seed        # seed categories
 npm run bootstrap-admin
 npm run email:test -- you@bicol-u.edu.ph   # real OTP delivery test

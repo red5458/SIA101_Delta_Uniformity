@@ -4,7 +4,7 @@
  *   npm run db:check
  *
  * Prints the provider, host, TLS mode, server version, and whether the
- * Uniformity tables and migrations are present. Never prints the password.
+ * Uniformity tables are present. Never prints the password.
  */
 import { closePool, query } from "../config/db";
 import { env } from "../config/env";
@@ -32,10 +32,6 @@ async function main() {
       WHERE table_schema = 'public' AND table_type = 'BASE TABLE'`,
   );
 
-  const migrations = await query<{ name: string; applied_at: Date }>(
-    `SELECT name, applied_at FROM schema_migrations ORDER BY name`,
-  ).catch(() => null);
-
   const counts = await query<{
     users: number;
     listings: number;
@@ -58,11 +54,6 @@ async function main() {
       `  tls         ${env.databaseSsl ? (env.databaseSslStrict ? "on (strict)" : "on") : "off"}`,
       `  server      ${info.version.split(",")[0]}`,
       `  tables      ${tableRows[0]?.count ?? 0} in public`,
-      `  migrations  ${
-        migrations
-          ? migrations.rows.map((row) => row.name).join(", ") || "none applied"
-          : "schema_migrations missing"
-      }`,
       counts
         ? `  rows        users=${counts.rows[0]?.users} listings=${counts.rows[0]?.listings} categories=${counts.rows[0]?.categories}`
         : "  rows        (tables not created yet)",

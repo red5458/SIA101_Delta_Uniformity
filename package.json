@@ -13,7 +13,6 @@
     "api:dev": "npm --prefix api run dev",
     "api:build": "npm --prefix api run build",
     "api:start": "npm --prefix api run start",
-    "db:migrate": "npm --prefix api run db:migrate",
     "db:seed": "npm --prefix api run db:seed",
     "bootstrap-admin": "npm --prefix api run bootstrap-admin",
     "test": "npm --prefix api test",
@@ -22,10 +21,7 @@
   },
   "dependencies": {
     "browser-image-compression": "^2.0.2",
-    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "date-fns": "^4.4.0",
-    "embla-carousel-react": "^8.6.0",
     "lucide-react": "^1.69.0",
     "next": "^16.4.5",
     "react": "^19.3.1",

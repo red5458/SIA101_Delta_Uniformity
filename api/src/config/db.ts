@@ -7,8 +7,6 @@ import { env } from "./env";
  *
  * Supabase notes:
  * - Use the **session pooler** string (port 5432) for this long-lived pool.
- * - Use the **direct** connection string for `db:migrate` if the pooler
- *   rejects DDL.
  */
 export const pool = new Pool({
   connectionString: env.DATABASE_URL,

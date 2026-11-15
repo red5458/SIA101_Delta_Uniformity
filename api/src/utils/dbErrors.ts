@@ -1,6 +1,6 @@
 /**
  * Turns low-level pg/node connection errors into actionable advice. Shared by
- * the API startup path and by the db:check / db:migrate scripts.
+ * the API startup path and by the db:check script.
  */
 export function databaseHint(error: unknown): string | null {
   const message = error instanceof Error ? error.message : String(error);
@@ -38,7 +38,7 @@ export function databaseHint(error: unknown): string | null {
   if (/prepared statement/i.test(message)) {
     return [
       "This looks like the transaction pooler rejecting prepared statements.",
-      "Use the Session pooler (port 5432) or direct connection string for migrations.",
+      "Use the Session pooler (port 5432) or a direct connection string.",
     ].join("\n");
   }
   if (/permission denied/i.test(message)) {

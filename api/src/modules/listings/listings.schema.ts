@@ -77,4 +77,3 @@ export const feedQuerySchema = z.object({
 
 export type ListingInput = z.infer<typeof listingSchema>;
 export type ListingUpdateInput = z.infer<typeof listingUpdateSchema>;
-export type FeedQuery = z.infer<typeof feedQuerySchema>;

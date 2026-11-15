@@ -83,9 +83,7 @@ files in `public/uploads/<userId>/` and returns a `local:` key. Next.js rewrites
 - **PostgreSQL on Supabase.** The API uses `pg` with a single pool and the
   Supabase **session pooler** URI. `DATABASE_SSL=auto` enables TLS based on the
   hostname (`*.supabase.co`, `*.pooler.supabase.com`) or an `sslmode=require`
-  parameter, so local Postgres still works with `DATABASE_SSL=false`. Migrations
-  run on a dedicated client so `BEGIN`/`COMMIT` stay on one connection even
-  behind a pooler.
+  parameter, so local Postgres still works with `DATABASE_SSL=false`.
 - **Gmail API for OTP delivery.** `EMAIL_MODE=gmail` exchanges a refresh token at
   `oauth2.googleapis.com/token`, caches the access token until shortly before
   expiry, builds an RFC 2822 multipart/alternative message, and posts it to
@@ -154,7 +152,8 @@ categories ──< listings
 - Foreign keys cascade where deleting the parent should remove dependent rows
   (e.g. listing → photos, wishlists, comments).
 
-See `api/migrations/001_init.sql` for the authoritative definition.
+The schema is maintained directly in the Supabase database; `npm run db:check`
+prints the live table count.
 
 ## Security boundaries
 
