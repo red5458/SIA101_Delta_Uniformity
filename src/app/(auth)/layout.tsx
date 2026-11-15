@@ -5,19 +5,13 @@ import { BrandLogo } from "@/components/layout/brand-logo";
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="grid min-h-dvh lg:grid-cols-[1.1fr_1fr]">
-      <aside
-        className="relative hidden overflow-hidden bg-brand-800 p-10 text-white lg:flex lg:flex-col lg:justify-between"
-        style={{ background: "linear-gradient(90deg, #235823 0%, #235823 80%, #f7faf4 100%)" }}
-      >
-        <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-gold-400/20 blur-2xl" />
-        <div className="absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-brand-500/30 blur-3xl" />
-
-        <Link href="/" className="relative flex items-center gap-2.5">
+      <aside className="hidden bg-brand-800 p-10 text-white lg:flex lg:flex-col lg:justify-between">
+        <Link href="/" className="flex items-center gap-2.5">
           <BrandLogo className="h-10 w-10 rounded-xl bg-white p-1" />
           <span className="font-display text-2xl font-bold">Uniformity</span>
         </Link>
 
-        <div className="relative max-w-md">
+        <div className="max-w-md">
           <h1 className="font-display text-4xl font-bold leading-tight">
             Your campus marketplace, built for BU Polangui.
           </h1>
@@ -46,7 +40,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           </ul>
         </div>
 
-        <p className="relative flex items-center gap-2 text-xs text-brand-200">
+        <p className="flex items-center gap-2 text-xs text-brand-200">
           <ShieldCheck className="h-4 w-4" />
           Institutional email verification keeps the community trusted.
         </p>
