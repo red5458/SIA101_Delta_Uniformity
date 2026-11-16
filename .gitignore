@@ -30,7 +30,5 @@ next-env.d.ts
 # Express API build output
 api/dist
 
-# Local development uploads (keep the imported legacy photo)
+# Local development uploads
 public/uploads/*
-!public/uploads/legacy/
-!public/uploads/legacy/**
