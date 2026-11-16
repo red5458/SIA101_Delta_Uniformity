@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const conversationIdSchema = z.string().uuid();
+export const messageIdSchema = z.string().uuid();
 
 export const createConversationSchema = z.object({
   listingId: z.string().uuid(),

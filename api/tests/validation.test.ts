@@ -15,6 +15,11 @@ import {
   listingSchema,
 } from "../src/modules/listings/listings.schema";
 import { sellerIdSchema } from "../src/modules/sellers/sellers.schema";
+import {
+  conversationIdSchema,
+  messageIdSchema,
+  messageQuerySchema,
+} from "../src/modules/chat/chat.schema";
 
 const validRegistration = {
   name: "Juan Dela Cruz",
@@ -216,5 +221,35 @@ describe("commentSchema", () => {
         text: "   ",
       }).success,
     ).toBe(false);
+  });
+});
+
+describe("chat ids", () => {
+  it("accepts uuids for conversations and messages", () => {
+    expect(
+      conversationIdSchema.safeParse("b5d31ea5-0091-4c39-8a3d-affc8592d351").success,
+    ).toBe(true);
+    expect(
+      messageIdSchema.safeParse("6d1c0f6e-2f4d-4e0b-9a51-5aa6f78b1c11").success,
+    ).toBe(true);
+  });
+
+  it("rejects anything that is not a uuid", () => {
+    expect(conversationIdSchema.safeParse("123").success).toBe(false);
+    expect(messageIdSchema.safeParse("delete-everything").success).toBe(false);
+  });
+});
+
+describe("messageQuerySchema", () => {
+  it("accepts a single cursor", () => {
+    const id = "b5d31ea5-0091-4c39-8a3d-affc8592d351";
+    expect(messageQuerySchema.safeParse({ beforeId: id }).success).toBe(true);
+    expect(messageQuerySchema.safeParse({ afterId: id }).success).toBe(true);
+    expect(messageQuerySchema.safeParse({}).success).toBe(true);
+  });
+
+  it("rejects two cursors at once", () => {
+    const id = "b5d31ea5-0091-4c39-8a3d-affc8592d351";
+    expect(messageQuerySchema.safeParse({ beforeId: id, afterId: id }).success).toBe(false);
   });
 });

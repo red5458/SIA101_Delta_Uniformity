@@ -2,6 +2,7 @@ import { query, withTransaction } from "../../config/db";
 import type { UserRow } from "../../types";
 import { badRequest, forbidden, notFound } from "../../utils/ApiError";
 import { createNotification } from "../notifications/notifications.service";
+import { destroyStoredAssets } from "../listings/media.service";
 import type { z } from "zod";
 import type { messageQuerySchema, sendMessageSchema } from "./chat.schema";
 
@@ -15,6 +16,7 @@ export interface ChatMessage {
   body: string;
   created_at: string;
   read_at: string | null;
+  deleted_at: string | null;
   attachments: ChatAttachment[];
 }
 
@@ -103,13 +105,15 @@ export async function getConversations(userId: string): Promise<ChatConversation
        CASE WHEN latest.message_id IS NULL THEN NULL ELSE json_build_object(
          'body', latest.body,
          'sender_id', latest.sender_id,
-         'created_at', latest.created_at
+         'created_at', latest.created_at,
+         'deleted_at', latest.deleted_at
        ) END AS last_message,
        (SELECT count(*)::int
           FROM chat_messages unread
          WHERE unread.conversation_id = c.conversation_id
            AND unread.sender_id <> $1
-           AND unread.read_at IS NULL) AS unread_count,
+           AND unread.read_at IS NULL
+           AND unread.deleted_at IS NULL) AS unread_count,
        c.updated_at
      FROM chat_conversations c
      JOIN listings l ON l.listing_id = c.listing_id
@@ -131,7 +135,8 @@ export async function getConversations(userId: string): Promise<ChatConversation
            ), 'Attachment')
          END AS body,
          m.sender_id,
-         m.created_at
+         m.created_at,
+         m.deleted_at
          FROM chat_messages m
         WHERE m.conversation_id = c.conversation_id
         ORDER BY m.created_at DESC, m.message_id DESC
@@ -159,15 +164,17 @@ async function assertParticipant(conversationId: string, userId: string) {
   return conversation;
 }
 
-function serializeMessage(row: Omit<ChatMessage, "created_at" | "read_at" | "attachments"> & {
+function serializeMessage(row: Omit<ChatMessage, "created_at" | "read_at" | "deleted_at" | "attachments"> & {
   created_at: Date | string;
   read_at: Date | string | null;
+  deleted_at: Date | string | null;
   attachments?: ChatAttachment[] | null;
 }): ChatMessage {
   return {
     ...row,
     created_at: iso(row.created_at)!,
     read_at: iso(row.read_at),
+    deleted_at: iso(row.deleted_at),
     attachments: row.attachments ?? [],
   };
 }
@@ -233,7 +240,7 @@ export async function getMessages(
     if (!cursor) throw badRequest("Message cursor is invalid.", "CURSOR_INVALID");
   }
 
-  let sql = `SELECT m.message_id, m.conversation_id, m.sender_id, m.body, m.created_at, m.read_at,
+  let sql = `SELECT m.message_id, m.conversation_id, m.sender_id, m.body, m.created_at, m.read_at, m.deleted_at,
                     COALESCE(a.items, '[]'::json) AS attachments
                FROM chat_messages m
                LEFT JOIN LATERAL (
@@ -261,19 +268,38 @@ export async function getMessages(
   params.push(isAfter ? 100 : 51);
   sql += ` ORDER BY m.created_at ${isAfter ? "ASC" : "DESC"}, m.message_id ${isAfter ? "ASC" : "DESC"} LIMIT $${params.length}`;
 
-  const { rows } = await query<{
-    message_id: string;
-    conversation_id: string;
-    sender_id: string;
-    body: string;
-    created_at: Date | string;
-    read_at: Date | string | null;
-    attachments: ChatAttachment[] | null;
-  }>(sql, params);
+  const [{ rows }, { rows: receipts }] = await Promise.all([
+    query<{
+      message_id: string;
+      conversation_id: string;
+      sender_id: string;
+      body: string;
+      created_at: Date | string;
+      read_at: Date | string | null;
+      deleted_at: Date | string | null;
+      attachments: ChatAttachment[] | null;
+    }>(sql, params),
+    // The recipient's read pass stamps read_at on every message it saw, so the
+    // newest stamp is exactly how far the sender's "Seen" label reaches. This
+    // query is independent of the page above, so run it at the same time.
+    query<{ last_read_at: Date | string | null }>(
+      `SELECT max(read_at) AS last_read_at
+         FROM chat_messages
+        WHERE conversation_id = $1
+          AND sender_id = $2`,
+      [conversationId, userId],
+    ),
+  ]);
+
   const hasMore = !isAfter && rows.length > 50;
   const messages = (hasMore ? rows.slice(0, 50) : rows).map(serializeMessage);
   if (!isAfter) messages.reverse();
-  return { items: messages, hasMore };
+
+  return {
+    items: messages,
+    hasMore,
+    other_last_read_at: iso(receipts[0]?.last_read_at ?? null),
+  };
 }
 
 export async function markMessagesRead(userId: string, conversationId: string) {
@@ -283,7 +309,8 @@ export async function markMessagesRead(userId: string, conversationId: string) {
         SET read_at = now()
       WHERE conversation_id = $1
         AND sender_id <> $2
-        AND read_at IS NULL`,
+        AND read_at IS NULL
+        AND deleted_at IS NULL`,
     [conversationId, userId],
   );
   return { read: true };
@@ -358,9 +385,10 @@ export async function sendMessage(
       body: string;
       created_at: Date | string;
       read_at: Date | string | null;
+      deleted_at: Date | string | null;
       attachments: ChatAttachment[] | null;
     }>(
-      `SELECT m.message_id, m.conversation_id, m.sender_id, m.body, m.created_at, m.read_at,
+      `SELECT m.message_id, m.conversation_id, m.sender_id, m.body, m.created_at, m.read_at, m.deleted_at,
               COALESCE(a.items, '[]'::json) AS attachments
          FROM chat_messages m
          LEFT JOIN LATERAL (
@@ -403,5 +431,91 @@ export async function sendMessage(
     actorId: user.user_id,
   });
 
+  return result.message;
+}
+
+/**
+ * Removes the whole conversation for both students. Messages and attachments
+ * cascade from the foreign keys, so the thread disappears everywhere.
+ */
+export async function deleteConversation(userId: string, conversationId: string) {
+  await assertParticipant(conversationId, userId);
+
+  const { rows: assets } = await query<{ asset_key: string }>(
+    `SELECT a.asset_key
+       FROM chat_attachments a
+       JOIN chat_messages m ON m.message_id = a.message_id
+      WHERE m.conversation_id = $1`,
+    [conversationId],
+  );
+
+  await query(`DELETE FROM chat_conversations WHERE conversation_id = $1`, [conversationId]);
+  // Message notifications would otherwise open a thread that no longer exists.
+  await query(`DELETE FROM notifications WHERE link_url = $1`, [`/messages/${conversationId}`]);
+  void destroyStoredAssets(assets.map((asset) => asset.asset_key));
+
+  return { deleted: true, conversation_id: conversationId };
+}
+
+/**
+ * Soft-deletes a single message: the row stays so both students keep their
+ * place in the thread, but the text and attachments are gone and the bubble
+ * renders as "Message unsent". Only the sender may do this.
+ */
+export async function unsendMessage(
+  userId: string,
+  conversationId: string,
+  messageId: string,
+) {
+  await assertParticipant(conversationId, userId);
+
+  const result = await withTransaction(async (client) => {
+    const { rows } = await client.query<{ sender_id: string; deleted_at: Date | string | null }>(
+      `SELECT sender_id, deleted_at
+         FROM chat_messages
+        WHERE message_id = $1 AND conversation_id = $2
+        FOR UPDATE`,
+      [messageId, conversationId],
+    );
+    const message = rows[0];
+    if (!message) throw notFound("Message not found");
+    if (message.sender_id !== userId) {
+      throw forbidden("You can only unsend your own messages.", "MESSAGE_OWNER");
+    }
+    if (message.deleted_at) throw badRequest("This message was already unsent.", "ALREADY_UNSENT");
+
+    const { rows: assets } = await client.query<{ asset_key: string }>(
+      `SELECT asset_key FROM chat_attachments WHERE message_id = $1`,
+      [messageId],
+    );
+    await client.query(`DELETE FROM chat_attachments WHERE message_id = $1`, [messageId]);
+
+    const { rows: updated } = await client.query<{
+      message_id: string;
+      conversation_id: string;
+      sender_id: string;
+      body: string;
+      created_at: Date | string;
+      read_at: Date | string | null;
+      deleted_at: Date | string | null;
+    }>(
+      `UPDATE chat_messages
+          SET body = '', deleted_at = now()
+        WHERE message_id = $1
+        RETURNING message_id, conversation_id, sender_id, body, created_at, read_at, deleted_at`,
+      [messageId],
+    );
+    await client.query(
+      `UPDATE chat_conversations SET updated_at = now() WHERE conversation_id = $1`,
+      [conversationId],
+    );
+
+    return {
+      keys: assets.map((asset) => asset.asset_key),
+      message: serializeMessage(updated[0]!),
+    };
+  });
+
+  void destroyStoredAssets(result.keys);
   return result.message;
 }

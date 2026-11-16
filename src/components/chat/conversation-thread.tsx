@@ -4,10 +4,11 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type FormEve
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, LoaderCircle, MessageCircle, Paperclip, Send, X } from "lucide-react";
+import { ArrowLeft, LoaderCircle, MessageCircle, Paperclip, Send, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import type { ChatAttachmentInput, ChatConversationSummary, ChatMessage, ChatMessagesPage } from "@/types/db";
 import { formatRelative, initials } from "@/lib/utils";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 const MAX_CHAT_ATTACHMENTS = 4;
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
@@ -103,21 +104,28 @@ export function ConversationThread({
   conversation,
   initialMessages,
   initialHasMore,
+  initialOtherLastReadAt,
   currentUserId,
 }: {
   conversation: ChatConversationSummary;
   initialMessages: ChatMessage[];
   initialHasMore: boolean;
+  initialOtherLastReadAt: string | null;
   currentUserId: string;
 }) {
   const router = useRouter();
   const [messages, setMessages] = useState(initialMessages);
   const [hasMore, setHasMore] = useState(initialHasMore);
+  const [otherLastReadAt, setOtherLastReadAt] = useState(initialOtherLastReadAt);
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [body, setBody] = useState("");
   const [attachments, setAttachments] = useState<PendingAttachment[]>([]);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [messageToUnsend, setMessageToUnsend] = useState<ChatMessage | null>(null);
+  const [unsending, setUnsending] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -147,9 +155,15 @@ export function ConversationThread({
         `/api/conversations/${conversation.conversation_id}/messages${query}`,
         { cache: "no-store" },
       );
+      if (response.status === 404) {
+        toast.error("This conversation was deleted.");
+        router.push("/messages");
+        return;
+      }
       if (!response.ok) return;
       const payload = await response.json();
       const page = payload.data as ChatMessagesPage;
+      setOtherLastReadAt(page.other_last_read_at ?? null);
       if (!page.items.length) return;
       setMessages((current) => {
         const known = new Set(current.map((message) => message.message_id));
@@ -159,7 +173,7 @@ export function ConversationThread({
     } catch {
       // Keep the current thread usable during a temporary network interruption.
     }
-  }, [conversation.conversation_id, markRead]);
+  }, [conversation.conversation_id, markRead, router]);
 
   useEffect(() => {
     markRead();
@@ -271,6 +285,55 @@ export function ConversationThread({
     }
   }
 
+  async function unsendSelectedMessage() {
+    if (!messageToUnsend) return;
+    setUnsending(true);
+    try {
+      const response = await fetch(
+        `/api/conversations/${conversation.conversation_id}/messages/${messageToUnsend.message_id}`,
+        { method: "DELETE" },
+      );
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(payload?.error?.message ?? "Message could not be unsent");
+      const updated = payload.data as ChatMessage;
+      setMessages((current) =>
+        current.map((message) =>
+          message.message_id === updated.message_id ? updated : message,
+        ),
+      );
+      setMessageToUnsend(null);
+      toast.success("Message unsent");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Message could not be unsent");
+    } finally {
+      setUnsending(false);
+    }
+  }
+
+  async function deleteConversation() {
+    setDeleting(true);
+    try {
+      const response = await fetch(`/api/conversations/${conversation.conversation_id}`, {
+        method: "DELETE",
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(payload?.error?.message ?? "Conversation could not be deleted");
+      toast.success("Conversation deleted");
+      router.push("/messages");
+      router.refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Conversation could not be deleted");
+      setDeleting(false);
+      setConfirmingDelete(false);
+    }
+  }
+
+  const lastOwnMessageId = [...messages]
+    .reverse()
+    .find((message) => message.sender_id === currentUserId && !message.deleted_at)?.message_id;
+  const isSeen = (message: ChatMessage) =>
+    Boolean(otherLastReadAt) && new Date(otherLastReadAt!) >= new Date(message.created_at);
+
   return (
     <section className="mx-auto flex h-[calc(100svh-12rem)] min-h-80 max-w-3xl flex-col overflow-hidden rounded-2xl border border-line bg-white shadow-card md:h-[calc(100svh-9rem)] md:min-h-[28rem]">
       <header className="flex items-center gap-3 border-b border-line px-3 py-3 sm:px-5">
@@ -291,6 +354,15 @@ export function ConversationThread({
         {conversation.listing_status === "Sold" && (
           <span className="badge border-line bg-cream text-muted">Sold</span>
         )}
+        <button
+          type="button"
+          onClick={() => setConfirmingDelete(true)}
+          aria-label="Delete conversation"
+          title="Delete conversation"
+          className="btn-ghost h-9 w-9 shrink-0 !px-0 text-muted hover:text-red-600"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
       </header>
 
       <div
@@ -319,42 +391,67 @@ export function ConversationThread({
           </div>
         ) : messages.map((message) => {
           const own = message.sender_id === currentUserId;
+          const deleted = Boolean(message.deleted_at);
           return (
             <div key={message.message_id} className={`flex ${own ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 sm:max-w-[75%] ${own ? "rounded-br-md bg-brand-700 text-white" : "rounded-bl-md border border-line bg-white text-ink"}`}>
-                {message.body && <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">{message.body}</p>}
-                {message.attachments?.length > 0 && (
-                  <div className={`space-y-2 ${message.body ? "mt-2" : ""}`}>
-                    {message.attachments.map((attachment) => (
-                      <div key={attachment.attachment_id}>
-                        {attachment.resource_type === "image" ? (
-                          <a href={attachment.url} target="_blank" rel="noreferrer" aria-label={`Open ${attachment.file_name}`}>
-                            <Image
-                              src={attachment.url}
-                              alt={attachment.file_name}
-                              width={640}
-                              height={480}
-                              unoptimized
-                              className="max-h-72 w-auto max-w-full rounded-xl object-contain"
-                            />
-                          </a>
-                        ) : (
-                          <video
-                            src={attachment.url}
-                            controls
-                            playsInline
-                            preload="metadata"
-                            className="max-h-72 max-w-full rounded-xl"
-                            aria-label={attachment.file_name}
-                          />
-                        )}
-                      </div>
-                    ))}
+              <div className={`flex max-w-[85%] flex-col sm:max-w-[75%] ${own ? "items-end" : "items-start"}`}>
+                <div className={`max-w-full rounded-2xl px-3.5 py-2.5 ${own ? "rounded-br-md bg-brand-700 text-white" : "rounded-bl-md border border-line bg-white text-ink"}`}>
+                  {deleted ? (
+                    <p className={`text-sm italic ${own ? "text-white/80" : "text-muted"}`}>Message unsent</p>
+                  ) : (
+                    <>
+                      {message.body && <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">{message.body}</p>}
+                      {message.attachments?.length > 0 && (
+                        <div className={`space-y-2 ${message.body ? "mt-2" : ""}`}>
+                          {message.attachments.map((attachment) => (
+                            <div key={attachment.attachment_id}>
+                              {attachment.resource_type === "image" ? (
+                                <a href={attachment.url} target="_blank" rel="noreferrer" aria-label={`Open ${attachment.file_name}`}>
+                                  <Image
+                                    src={attachment.url}
+                                    alt={attachment.file_name}
+                                    width={640}
+                                    height={480}
+                                    unoptimized
+                                    className="max-h-72 w-auto max-w-full rounded-xl object-contain"
+                                  />
+                                </a>
+                              ) : (
+                                <video
+                                  src={attachment.url}
+                                  controls
+                                  playsInline
+                                  preload="metadata"
+                                  className="max-h-72 max-w-full rounded-xl"
+                                  aria-label={attachment.file_name}
+                                />
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
+                  <div className="mt-1 flex items-center justify-end gap-2">
+                    {own && !deleted && (
+                      <button
+                        type="button"
+                        onClick={() => setMessageToUnsend(message)}
+                        className="text-[10px] text-white/60 underline-offset-2 hover:text-white hover:underline"
+                      >
+                        Unsend
+                      </button>
+                    )}
+                    <time dateTime={message.created_at} className={`text-[10px] ${own ? "text-white/70" : "text-muted"}`}>
+                      {formatRelative(message.created_at)}
+                    </time>
                   </div>
+                </div>
+                {own && !deleted && message.message_id === lastOwnMessageId && (
+                  <span className="mt-1 text-[10px] font-medium text-muted">
+                    {isSeen(message) ? "Seen" : "Sent"}
+                  </span>
                 )}
-                <time dateTime={message.created_at} className={`mt-1 block text-right text-[10px] ${own ? "text-white/70" : "text-muted"}`}>
-                  {formatRelative(message.created_at)}
-                </time>
               </div>
             </div>
           );
@@ -415,6 +512,26 @@ export function ConversationThread({
         </form>
         <p className="mt-1.5 text-right text-[10px] text-muted">Up to 4 attachments · photos 5 MB · videos 25 MB</p>
       </div>
+
+      <ConfirmDialog
+        open={confirmingDelete}
+        title="Delete this conversation?"
+        description={`This permanently removes every message for you and ${conversation.other_user.name}. This cannot be undone.`}
+        confirmLabel="Delete conversation"
+        pending={deleting}
+        onCancel={() => setConfirmingDelete(false)}
+        onConfirm={() => void deleteConversation()}
+      />
+      <ConfirmDialog
+        open={Boolean(messageToUnsend)}
+        title="Unsend this message?"
+        description='Everyone in this chat will see "Message unsent" instead, and any photos or videos in this message are deleted.'
+        confirmLabel="Unsend"
+        destructive={false}
+        pending={unsending}
+        onCancel={() => setMessageToUnsend(null)}
+        onConfirm={() => void unsendSelectedMessage()}
+      />
     </section>
   );
 }

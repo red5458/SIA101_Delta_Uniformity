@@ -22,6 +22,7 @@ export default async function ConversationPage({
       conversation={conversation}
       initialMessages={messagePage.items}
       initialHasMore={messagePage.hasMore}
+      initialOtherLastReadAt={messagePage.other_last_read_at}
       currentUserId={session.authUser.id}
     />
   );

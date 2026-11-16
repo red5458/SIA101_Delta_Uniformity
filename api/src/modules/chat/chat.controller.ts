@@ -4,15 +4,18 @@ import { ok } from "../../utils/http";
 import {
   createConversationSchema,
   conversationIdSchema,
+  messageIdSchema,
   messageQuerySchema,
   sendMessageSchema,
 } from "./chat.schema";
 import {
+  deleteConversation,
   getConversations,
   getMessages,
   getOrCreateConversation,
   markMessagesRead,
   sendMessage,
+  unsendMessage,
 } from "./chat.service";
 
 function currentUser(req: Request) {
@@ -52,4 +55,18 @@ export async function sendMessageHandler(req: Request, res: Response) {
 export async function markMessagesReadHandler(req: Request, res: Response) {
   const conversationId = conversationIdSchema.parse(req.params.id);
   return ok(res, await markMessagesRead(currentUser(req).user_id, conversationId));
+}
+
+export async function deleteConversationHandler(req: Request, res: Response) {
+  const conversationId = conversationIdSchema.parse(req.params.id);
+  return ok(res, await deleteConversation(currentUser(req).user_id, conversationId));
+}
+
+export async function unsendMessageHandler(req: Request, res: Response) {
+  const conversationId = conversationIdSchema.parse(req.params.id);
+  const messageId = messageIdSchema.parse(req.params.messageId);
+  return ok(
+    res,
+    await unsendMessage(currentUser(req).user_id, conversationId, messageId),
+  );
 }

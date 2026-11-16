@@ -7,6 +7,15 @@ import { MessageSquareText } from "lucide-react";
 import { formatRelative, initials } from "@/lib/utils";
 import type { ChatConversationSummary } from "@/types/db";
 
+function previewText(conversation: ChatConversationSummary, currentUserId: string) {
+  const last = conversation.last_message;
+  if (!last) return "No messages yet — say hello!";
+  if (last.deleted_at) {
+    return last.sender_id === currentUserId ? "You unsent a message" : "Message unsent";
+  }
+  return `${last.sender_id === currentUserId ? "You: " : ""}${last.body}`;
+}
+
 export function ConversationList({
   initialConversations,
   currentUserId,
@@ -79,9 +88,7 @@ export function ConversationList({
               </span>
               <span className="mt-0.5 block truncate text-xs font-medium text-brand-700">{conversation.listing_title}</span>
               <span className={`mt-1 block truncate text-xs ${unread ? "font-semibold text-ink" : "text-muted"}`}>
-                {conversation.last_message
-                  ? `${conversation.last_message.sender_id === currentUserId ? "You: " : ""}${conversation.last_message.body}`
-                  : "No messages yet — say hello!"}
+                {previewText(conversation, currentUserId)}
               </span>
             </span>
             <span className="flex shrink-0 flex-col items-end gap-1.5">

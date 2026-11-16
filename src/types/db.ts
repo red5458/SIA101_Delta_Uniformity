@@ -165,6 +165,7 @@ export interface ChatMessage {
   body: string;
   created_at: string;
   read_at: string | null;
+  deleted_at: string | null;
   attachments: ChatAttachment[];
 }
 
@@ -202,6 +203,7 @@ export interface ChatConversationSummary {
     body: string;
     sender_id: string;
     created_at: string;
+    deleted_at: string | null;
   } | null;
   unread_count: number;
   updated_at: string;
@@ -210,6 +212,7 @@ export interface ChatConversationSummary {
 export interface ChatMessagesPage {
   items: ChatMessage[];
   hasMore: boolean;
+  other_last_read_at: string | null;
 }
 
 export interface AdminStats {
