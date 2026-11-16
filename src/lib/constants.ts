@@ -89,13 +89,14 @@ export function departmentAccent(department: Department | null | undefined) {
       };
 }
 
+/** The eleven undergraduate programs offered at BU Polangui. */
 export const PROGRAMS_BY_DEPARTMENT: Record<Department, string[]> = {
-  CSD: ["BSIT", "BSCS", "BSIS"],
-  ENGINEERING: ["BSCE", "BSCpE", "BSEE", "BSME", "BSCHE"],
+  CSD: ["BSCS", "BSIS", "BSIT"],
+  ENGINEERING: ["BSCpE", "BSECE"],
   NURSING: ["BSN"],
-  TECHNOLOGY: ["BSIndTech", "BTVTE"],
-  EDUCATION: ["BEEd", "BSEd", "BPEd"],
-  ENTREPRENEURSHIP: ["BS Entrepreneurship"],
+  TECHNOLOGY: ["BIndTech"],
+  EDUCATION: ["BEEd", "BSEd", "BTLEd"],
+  ENTREPRENEURSHIP: ["BS Entrep"],
 };
 
 export const YEAR_LEVELS: YearLevel[] = [
