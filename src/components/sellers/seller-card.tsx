@@ -36,7 +36,7 @@ export function SellerCard({
           <Link
             href={`/students/${seller.user_id}`}
             aria-label={`View ${seller.name}'s listings`}
-            className={`relative grid h-16 w-16 place-items-center overflow-hidden rounded-2xl border-4 border-white bg-gold-300 text-xl font-black text-brand-900 shadow-sm ring-2 ring-offset-1 ring-offset-white transition-transform hover:scale-[1.03] ${sellerAccent.ring}`}
+            className={`relative grid h-16 w-16 place-items-center overflow-hidden rounded-2xl border-4 border-white bg-gold-300 text-xl font-bold text-brand-900 shadow-sm ring-2 ring-offset-1 ring-offset-white transition-transform hover:scale-[1.03] ${sellerAccent.ring}`}
           >
             {seller.avatar_url ? (
               <Image src={seller.avatar_url} alt={`${seller.name}'s profile photo`} fill sizes="64px" className="object-cover" />

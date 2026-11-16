@@ -136,11 +136,12 @@ export default async function BrowsePage({
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
-          {feed.listings.map((listing) => (
+          {feed.listings.map((listing, index) => (
             <ListingCard
               key={listing.listing_id}
               listing={listing}
               wishlisted={wishlist.has(listing.listing_id)}
+              priority={index < 4}
             />
           ))}
         </div>

@@ -161,6 +161,7 @@ export default async function LandingPage() {
                             src={photo.image_url}
                             alt={listing.title}
                             fill
+                            priority={index < 2}
                             sizes="(max-width: 640px) 45vw, 260px"
                             className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                           />

@@ -43,13 +43,6 @@ export async function findUserByEmail(email: string): Promise<UserRow | null> {
   return rows[0] ?? null;
 }
 
-export async function findUserById(userId: string): Promise<UserRow | null> {
-  const { rows } = await query<UserRow>(`SELECT * FROM users WHERE user_id = $1`, [
-    userId,
-  ]);
-  return rows[0] ?? null;
-}
-
 async function latestCode(userId: string): Promise<VerificationRow | null> {
   const { rows } = await query<VerificationRow>(
     `SELECT code_id, code_hash, attempts, expires_at, consumed_at, created_at

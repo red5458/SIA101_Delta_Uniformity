@@ -11,9 +11,12 @@ import { WishlistButton } from "@/components/listings/wishlist-button";
 export function ListingCard({
   listing,
   wishlisted = false,
+  priority = false,
 }: {
   listing: Listing;
   wishlisted?: boolean;
+  /** Load the photo eagerly (use for the first cards above the fold). */
+  priority?: boolean;
 }) {
   const photo = [...(listing.photos ?? [])].sort(
     (a, b) => a.position - b.position,
@@ -54,6 +57,7 @@ export function ListingCard({
               src={photo.image_url}
               alt={listing.title}
               fill
+              priority={priority}
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               className="object-cover"
             />

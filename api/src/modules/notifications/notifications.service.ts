@@ -135,13 +135,17 @@ export async function listNotifications(
 
   params.push(limit + 1);
 
-  const { rows } = await query<RawNotification>(
-    `${NOTIFICATION_SELECT}
-      WHERE ${conditions.join(" AND ")}
-      ORDER BY n.created_at DESC
-      LIMIT $${params.length}`,
-    params,
-  );
+  // The page of notifications and the badge count are independent queries.
+  const [{ rows }, unreadCount] = await Promise.all([
+    query<RawNotification>(
+      `${NOTIFICATION_SELECT}
+        WHERE ${conditions.join(" AND ")}
+        ORDER BY n.created_at DESC
+        LIMIT $${params.length}`,
+      params,
+    ),
+    countUnread(userId),
+  ]);
 
   const hasMore = rows.length > limit;
   const items = (hasMore ? rows.slice(0, limit) : rows).map(serialize);
@@ -149,7 +153,7 @@ export async function listNotifications(
   return {
     items,
     nextCursor: hasMore ? items[items.length - 1]!.created_at : null,
-    unreadCount: await countUnread(userId),
+    unreadCount,
   };
 }
 

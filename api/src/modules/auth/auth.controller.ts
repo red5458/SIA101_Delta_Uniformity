@@ -15,7 +15,6 @@ import {
 } from "./auth.schema";
 import {
   changePassword,
-  findUserById,
   login,
   register,
   requestPasswordReset,
@@ -164,11 +163,10 @@ export async function logoutHandler(req: Request, res: Response) {
 }
 
 export async function meHandler(req: Request, res: Response) {
-  const current = req.user;
-  if (!current) throw unauthorized();
-
-  // Re-read so a suspension applied by an admin shows up immediately.
-  const user = (await findUserById(current.user_id)) ?? current;
+  // `authenticate` already reloaded this row for the current request, so an
+  // admin suspension is reflected without a second database round trip.
+  const user = req.user;
+  if (!user) throw unauthorized();
 
   return ok(res, {
     user: {

@@ -18,28 +18,30 @@ export interface SellerPage {
  * the feed and detail rules.
  */
 export async function getSellerPage(userId: string): Promise<SellerPage | null> {
-  const { rows } = await query<SellerRow>(
-    `SELECT user_id,
-            name,
-            program,
-            year_level,
-            department,
-            CASE WHEN show_contact_details THEN contact_email ELSE NULL END AS contact_email,
-            CASE WHEN show_contact_details THEN contact_mobile ELSE NULL END AS contact_mobile,
-            CASE WHEN show_contact_details THEN contact_messenger ELSE NULL END AS contact_messenger,
-            avatar_url,
-            is_verified,
-            created_at
-       FROM users
-      WHERE user_id = $1
-        AND is_suspended = false`,
-    [userId],
-  );
+  // The seller card and their listings are independent, so fetch both at once.
+  const [{ rows }, listings] = await Promise.all([
+    query<SellerRow>(
+      `SELECT user_id,
+              name,
+              program,
+              year_level,
+              department,
+              CASE WHEN show_contact_details THEN contact_email ELSE NULL END AS contact_email,
+              CASE WHEN show_contact_details THEN contact_mobile ELSE NULL END AS contact_mobile,
+              CASE WHEN show_contact_details THEN contact_messenger ELSE NULL END AS contact_messenger,
+              avatar_url,
+              is_verified,
+              created_at
+         FROM users
+        WHERE user_id = $1
+          AND is_suspended = false`,
+      [userId],
+    ),
+    getSellerListings(userId),
+  ]);
 
   const seller = rows[0];
   if (!seller) return null;
-
-  const listings = await getSellerListings(userId);
 
   return {
     seller: {
