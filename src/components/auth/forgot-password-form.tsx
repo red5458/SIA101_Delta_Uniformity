@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useResendCooldown } from "@/hooks/use-resend-cooldown";
 
 export function ForgotPasswordForm() {
   const router = useRouter();
@@ -16,6 +17,11 @@ export function ForgotPasswordForm() {
   const [pending, setPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const { remaining, start: startCooldown } = useResendCooldown(
+    `reset:${email.trim().toLowerCase()}`,
+    60,
+    false,
+  );
 
   async function requestCode(event: React.FormEvent) {
     event.preventDefault();
@@ -29,8 +35,32 @@ export function ForgotPasswordForm() {
       const payload = await response.json();
       if (!response.ok) throw new Error(payload?.error?.message ?? "Could not request a reset code.");
       if (payload.data?.devOtp) setOtp(payload.data.devOtp);
+      startCooldown();
       setSent(true);
       toast.success("If that verified student account exists, a reset code has been sent.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not request a reset code.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function resendCode() {
+    setPending(true);
+    try {
+      const response = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        if (payload?.error?.code === "RESEND_COOLDOWN") startCooldown();
+        throw new Error(payload?.error?.message ?? "Could not request a reset code.");
+      }
+      if (payload.data?.devOtp) setOtp(payload.data.devOtp);
+      startCooldown();
+      toast.success("A new reset code has been sent.");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not request a reset code.");
     } finally {
@@ -90,6 +120,14 @@ export function ForgotPasswordForm() {
       <button type="submit" disabled={pending || otp.length !== 6} className="btn-primary w-full">
         {pending && <Loader2 className="h-4 w-4 animate-spin" />}
         Reset password
+      </button>
+      <button
+        type="button"
+        onClick={resendCode}
+        disabled={pending || remaining > 0}
+        className="btn-ghost w-full text-sm tabular-nums disabled:text-muted/60"
+      >
+        {remaining > 0 ? `Resend code in ${remaining}s` : "Resend code"}
       </button>
       <button type="button" onClick={() => setSent(false)} className="btn-ghost w-full text-sm">Use a different email</button>
     </form>

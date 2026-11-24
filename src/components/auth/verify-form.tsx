@@ -4,12 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, MailCheck, RotateCw } from "lucide-react";
 import { toast } from "sonner";
+import { useResendCooldown } from "@/hooks/use-resend-cooldown";
 
 export function VerifyForm({ email }: { email: string }) {
   const router = useRouter();
   const [otp, setOtp] = useState("");
   const [pending, setPending] = useState(false);
   const [resending, setResending] = useState(false);
+  const { remaining, start: startCooldown } = useResendCooldown(email);
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -44,8 +46,10 @@ export function VerifyForm({ email }: { email: string }) {
       });
       const payload = await response.json();
       if (!response.ok) {
+        if (payload?.error?.code === "RESEND_COOLDOWN") startCooldown();
         throw new Error(payload?.error?.message ?? "Could not resend");
       }
+      startCooldown();
       toast.success("A new code is on its way");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not resend");
@@ -91,15 +95,19 @@ export function VerifyForm({ email }: { email: string }) {
       <button
         type="button"
         onClick={resend}
-        disabled={resending}
-        className="btn-ghost w-full text-sm"
+        disabled={resending || remaining > 0}
+        className="btn-ghost w-full text-sm tabular-nums disabled:text-muted/60"
       >
         {resending ? (
           <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
+        ) : remaining > 0 ? null : (
           <RotateCw className="h-4 w-4" />
         )}
-        Resend code
+        {resending
+          ? "Sending…"
+          : remaining > 0
+            ? `Resend code in ${remaining}s`
+            : "Resend code"}
       </button>
     </div>
   );
