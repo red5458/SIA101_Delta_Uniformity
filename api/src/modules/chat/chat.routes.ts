@@ -10,12 +10,14 @@ import {
   listMessagesHandler,
   markMessagesReadHandler,
   sendMessageHandler,
+  unreadCountHandler,
   unsendMessageHandler,
 } from "./chat.controller";
 
 export const chatRouter = Router();
 
 chatRouter.use(authenticate);
+chatRouter.get("/unread-count", asyncHandler(unreadCountHandler));
 chatRouter.get("/", asyncHandler(listConversationsHandler));
 chatRouter.post("/", requireActive, writeLimiter, asyncHandler(createConversationHandler));
 chatRouter.delete("/:id", requireActive, writeLimiter, asyncHandler(deleteConversationHandler));

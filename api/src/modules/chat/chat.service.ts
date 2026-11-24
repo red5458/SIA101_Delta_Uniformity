@@ -88,6 +88,20 @@ export async function getOrCreateConversation(user: UserRow, listingId: string) 
   return { conversation_id: rows[0]!.conversation_id };
 }
 
+export async function countUnreadMessages(userId: string): Promise<number> {
+  const { rows } = await query<{ count: number }>(
+    `SELECT count(*)::int AS count
+       FROM chat_messages m
+       JOIN chat_conversations c ON c.conversation_id = m.conversation_id
+      WHERE (c.buyer_id = $1 OR c.seller_id = $1)
+        AND m.sender_id <> $1
+        AND m.read_at IS NULL
+        AND m.deleted_at IS NULL`,
+    [userId],
+  );
+  return rows[0]?.count ?? 0;
+}
+
 export async function getConversations(userId: string): Promise<ChatConversationSummary[]> {
   const { rows } = await query<ChatConversationSummary>(
     `SELECT

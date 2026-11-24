@@ -87,16 +87,15 @@ export default async function DashboardPage() {
               >
                 <Link
                   href={`/listings/${listing.listing_id}`}
-                  className="relative h-20 w-full shrink-0 overflow-hidden rounded-xl bg-brand-50 sm:h-16 sm:w-16"
+                  className="relative h-24 w-24 shrink-0 self-start overflow-hidden rounded-xl bg-brand-50 sm:h-16 sm:w-16 sm:self-auto"
                 >
                   {photo ? (
                     <Image
                       src={photo.image_url}
                       alt={listing.title}
-                      width={64}
-                      height={64}
-                      sizes="64px"
-                      className="h-full w-full object-cover"
+                      fill
+                      sizes="(max-width: 640px) 96px, 64px"
+                      className="object-cover"
                     />
                   ) : (
                     <span className="grid h-full place-items-center text-xs text-muted">

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bookmark, LayoutDashboard, MessageCircle, PlusCircle, Store } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ChatUnreadBadge } from "@/components/chat/chat-unread-badge";
 
 const ITEMS = [
   { href: "/browse", label: "Browse", icon: Store },
@@ -46,7 +47,12 @@ export function MobileNav() {
                 active ? "text-brand-700" : "text-muted",
               )}
             >
-              <item.icon className={cn("h-5 w-5", active && "stroke-[2.4]")} />
+              <span className="relative inline-flex">
+                <item.icon className={cn("h-5 w-5", active && "stroke-[2.4]")} />
+                {item.href === "/messages" && (
+                  <ChatUnreadBadge className="absolute -right-2.5 -top-1.5" />
+                )}
+              </span>
               {item.label}
             </Link>
           );

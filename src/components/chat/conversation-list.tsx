@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { MessageSquareText } from "lucide-react";
-import { formatRelative, initials } from "@/lib/utils";
+import { cn, formatRelative, initials } from "@/lib/utils";
 import type { ChatConversationSummary } from "@/types/db";
 
 function previewText(conversation: ChatConversationSummary, currentUserId: string) {
@@ -74,7 +74,10 @@ export function ConversationList({
           <Link
             key={conversation.conversation_id}
             href={`/messages/${conversation.conversation_id}`}
-            className="card flex items-center gap-3 p-3 transition-colors hover:bg-brand-50/40 sm:gap-4 sm:p-4"
+            className={cn(
+              "card flex items-center gap-3 p-3 transition-colors hover:bg-brand-50/40 sm:gap-4 sm:p-4",
+              unread > 0 && "bg-brand-50/40",
+            )}
           >
             <span className="relative grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-full bg-brand-100 text-sm font-bold text-brand-800">
               {conversation.other_user.avatar_url ? (
@@ -84,6 +87,9 @@ export function ConversationList({
             <span className="min-w-0 flex-1">
               <span className="flex items-center gap-2">
                 <span className="truncate text-sm font-semibold text-ink">{conversation.other_user.name}</span>
+                {unread > 0 && (
+                  <span className="h-2 w-2 shrink-0 rounded-full bg-red-600" aria-label="New messages" />
+                )}
                 {conversation.listing_status === "Sold" && <span className="badge border-line bg-cream px-2 py-0.5 text-[10px] text-muted">Sold</span>}
               </span>
               <span className="mt-0.5 block truncate text-xs font-medium text-brand-700">{conversation.listing_title}</span>

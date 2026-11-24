@@ -22,6 +22,7 @@ import { cn, initials } from "@/lib/utils";
 import type { Profile } from "@/types/db";
 import { BrandLogo } from "@/components/layout/brand-logo";
 import { NotificationBell } from "@/components/notifications/notification-bell";
+import { ChatUnreadBadge } from "@/components/chat/chat-unread-badge";
 import { departmentAccent } from "@/lib/constants";
 
 const NAV = [
@@ -84,7 +85,12 @@ export function Header({
                 pathname === item.href && "bg-brand-50 text-brand-800",
               )}
             >
-              <item.icon className="h-4 w-4" />
+              <span className="relative inline-flex">
+                <item.icon className="h-4 w-4" />
+                {item.href === "/messages" && (
+                  <ChatUnreadBadge className="absolute -right-2 -top-1.5" />
+                )}
+              </span>
               {item.label}
             </Link>
           ))}
@@ -168,7 +174,12 @@ export function Header({
                 onClick={() => setOpen(false)}
                 className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-ink transition-[transform,background-color] duration-100 hover:bg-brand-50 active:scale-[0.98] active:bg-brand-100"
               >
-                <item.icon className="h-4 w-4" />
+                <span className="relative inline-flex">
+                  <item.icon className="h-4 w-4" />
+                  {item.href === "/messages" && (
+                    <ChatUnreadBadge className="absolute -right-2 -top-1.5" />
+                  )}
+                </span>
                 {item.label}
               </Link>
             ))}

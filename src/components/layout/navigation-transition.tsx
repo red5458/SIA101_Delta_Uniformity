@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent, type MouseEvent, type ReactNode } from "react";
+import { useEffect, useState, type MouseEvent, type ReactNode } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { LoaderCircle } from "lucide-react";
 
@@ -52,21 +52,11 @@ export function NavigationTransition({ children }: { children: ReactNode }) {
     setPending(true);
   }
 
-  function handleSubmit(event: FormEvent<HTMLDivElement>) {
-    const form = event.target;
-    if (!(form instanceof HTMLFormElement)) return;
-    const destination = new URL(form.action, window.location.href);
-    if (destination.pathname === "/browse" && form.method.toLowerCase() === "get") {
-      setPending(true);
-    }
-  }
-
   return (
     <>
       <div
         key={pathname}
         onClickCapture={handleClick}
-        onSubmitCapture={handleSubmit}
         className="animate-fade-in-slow"
       >
         {children}

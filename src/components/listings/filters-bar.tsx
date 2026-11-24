@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -37,21 +37,57 @@ export function FiltersBar({ categories, departments, current }: Props) {
   useEffect(() => setLoadingDepartment(null), [searchKey]);
 
   function toggleDepartment(department: Department) {
-    setLoadingDepartment(department);
-    const nextDepartments = selectedDepartments.includes(department)
-      ? selectedDepartments.filter((item) => item !== department)
-      : [...selectedDepartments, department];
+    const nextDepartments = departments.includes(department)
+      ? departments.filter((item) => item !== department)
+      : [...departments, department];
     setSelectedDepartments(nextDepartments);
 
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(searchParams.toString());
     params.delete("department");
     nextDepartments.forEach((item) => params.append("department", item));
     params.delete("page");
     const query = params.toString();
+    if (query === searchKey) {
+      setLoadingDepartment(null);
+      return;
+    }
+    setLoadingDepartment(department);
+    router.push(query ? `/browse?${query}` : "/browse", { scroll: false });
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    // Collect values before closing the modal: the controls live in a portal,
+    // so unmounting it first would drop them from the submission.
+    const data = new FormData(event.currentTarget);
+    const params = new URLSearchParams();
+    const keys = [
+      "q",
+      "category",
+      "item_type",
+      "size",
+      "condition",
+      "min_price",
+      "max_price",
+      "sort",
+    ] as const;
+    for (const key of keys) {
+      const value = String(data.get(key) ?? "").trim();
+      if (value && !(key === "sort" && value === "newest")) params.set(key, value);
+    }
+    for (const department of data.getAll("department")) {
+      params.append("department", String(department));
+    }
+
+    const query = params.toString();
+    setFiltersOpen(false);
+    if (query === searchKey) return;
+    window.dispatchEvent(new CustomEvent("uniformity:route-transition"));
     router.push(query ? `/browse?${query}` : "/browse", { scroll: false });
   }
 
   const activeFilterCount = [
+    current.q,
     current.category,
     current.item_type,
     current.size,
@@ -63,9 +99,11 @@ export function FiltersBar({ categories, departments, current }: Props) {
 
   return (
     <form
+      key={searchKey}
       id="browse-listing-filters"
       method="get"
       action="/browse"
+      onSubmit={handleSubmit}
       className="card relative mb-5 p-3.5 sm:p-4"
       aria-label="Filter listings"
     >
@@ -246,7 +284,6 @@ export function FiltersBar({ categories, departments, current }: Props) {
           <button
             form="browse-listing-filters"
             type="submit"
-            onClick={() => setFiltersOpen(false)}
             className="btn-primary flex-1 sm:flex-none"
           >
             Apply filters

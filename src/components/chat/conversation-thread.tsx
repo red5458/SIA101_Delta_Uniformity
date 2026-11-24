@@ -143,7 +143,9 @@ export function ConversationThread({
   const markRead = useCallback(() => {
     void fetch(`/api/conversations/${conversation.conversation_id}/read`, {
       method: "POST",
-    }).catch(() => undefined);
+    })
+      .then(() => window.dispatchEvent(new CustomEvent("uniformity:chat-updated")))
+      .catch(() => undefined);
   }, [conversation.conversation_id]);
 
   const pollForMessages = useCallback(async () => {

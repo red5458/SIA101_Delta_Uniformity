@@ -9,6 +9,7 @@ import {
   sendMessageSchema,
 } from "./chat.schema";
 import {
+  countUnreadMessages,
   deleteConversation,
   getConversations,
   getMessages,
@@ -25,6 +26,10 @@ function currentUser(req: Request) {
 
 export async function listConversationsHandler(req: Request, res: Response) {
   return ok(res, await getConversations(currentUser(req).user_id));
+}
+
+export async function unreadCountHandler(req: Request, res: Response) {
+  return ok(res, { count: await countUnreadMessages(currentUser(req).user_id) });
 }
 
 export async function createConversationHandler(req: Request, res: Response) {
