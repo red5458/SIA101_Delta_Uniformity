@@ -62,18 +62,29 @@ export const listingUpdateSchema = listingSchema.partial().extend({
   status: z.enum(["Active", "Sold"]).optional(),
 });
 
-export const feedQuerySchema = z.object({
-  department: z.union([z.enum(DEPARTMENTS), z.array(z.enum(DEPARTMENTS))]).optional(),
-  category: z.string().uuid().optional(),
-  item_type: z.enum(ITEM_TYPES).optional(),
-  size: z.enum(SIZES).optional(),
-  condition: z.enum(CONDITIONS).optional(),
-  min_price: z.coerce.number().min(0).max(100000).optional(),
-  max_price: z.coerce.number().min(0).max(100000).optional(),
-  sort: z.enum(["newest", "price_asc", "price_desc"]).optional(),
-  q: z.string().trim().max(120).optional(),
-  page: z.coerce.number().int().min(1).max(10_000).optional(),
-});
+export const feedQuerySchema = z
+  .object({
+    department: z.union([z.enum(DEPARTMENTS), z.array(z.enum(DEPARTMENTS))]).optional(),
+    category: z.string().uuid().optional(),
+    item_type: z.enum(ITEM_TYPES).optional(),
+    size: z.enum(SIZES).optional(),
+    condition: z.enum(CONDITIONS).optional(),
+    min_price: z.coerce.number().min(0).max(100000).optional(),
+    max_price: z.coerce.number().min(0).max(100000).optional(),
+    sort: z.enum(["newest", "price_asc", "price_desc"]).optional(),
+    q: z.string().trim().max(120).optional(),
+    page: z.coerce.number().int().min(1).max(10_000).optional(),
+  })
+  .refine(
+    (value) =>
+      value.min_price === undefined ||
+      value.max_price === undefined ||
+      value.min_price <= value.max_price,
+    {
+      message: "min_price cannot be greater than max_price",
+      path: ["min_price"],
+    },
+  );
 
 export type ListingInput = z.infer<typeof listingSchema>;
 export type ListingUpdateInput = z.infer<typeof listingUpdateSchema>;
