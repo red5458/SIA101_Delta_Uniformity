@@ -4,16 +4,16 @@ The app deploys as two services plus two external providers:
 
 | Piece        | Host                     | Notes                                        |
 | ------------ | ------------------------ | -------------------------------------------- |
-| Next.js      | Vercel or Render         | Server Components + `/api/*` BFF             |
+| Next.js      | Render                   | Server Components + `/api/*` BFF             |
 | Express API  | Render                   | Root directory `api`                         |
 | PostgreSQL   | **Supabase**             | Session pooler connection string, TLS on     |
 | Photos       | Cloudinary               | Signed direct uploads                        |
 | Email        | **Gmail API**            | OAuth2 refresh token with `gmail.send` scope |
 
 ```
-Browser ──► Next.js (Vercel/Render) ──► Render (Express API) ──► Supabase Postgres
-                                     │                    Cloudinary
-                                     └──────────────────► Gmail API
+Browser ──► Next.js (Render) ──► Render (Express API) ──► Supabase Postgres
+                              │                    Cloudinary
+                              └──────────────────► Gmail API
 ```
 
 ## 1. Supabase database
@@ -175,26 +175,8 @@ Notes:
 
 ## 4. Next.js frontend
 
-The frontend runs either on Vercel (recommended: no cold starts) or as a second
-Render web service from the same `render.yaml` Blueprint.
-
-### Vercel
-
-Import the repository and set:
-
-```dotenv
-API_URL=https://<your-api>.onrender.com
-NEXT_PUBLIC_VAPID_PUBLIC_KEY=<the API's VAPID_PUBLIC_KEY>
-```
-
-`API_URL` is used at build time (rewrites) and runtime (BFF), so redeploy after
-changing it. `NEXT_PUBLIC_VAPID_PUBLIC_KEY` is inlined at build time too: use the
-same public key as the API and redeploy if it changes. Leave it unset to ship
-without Web Push; push is skipped rather than erroring.
-
-### Render web service
-
-`render.yaml` already defines `uniformity-web`:
+The frontend runs as a second Render web service from the same `render.yaml`
+Blueprint. `render.yaml` already defines `uniformity-web`:
 
 - Root directory: `.`
 - Build command: `npm ci --include=dev && npm run build`
@@ -204,12 +186,17 @@ without Web Push; push is skipped rather than erroring.
 - Environment: `API_URL=https://uniformity-api.onrender.com` and
   `NEXT_PUBLIC_VAPID_PUBLIC_KEY=<the API's public key>`
 
+`API_URL` is read at build time (rewrites) and runtime (BFF), and
+`NEXT_PUBLIC_VAPID_PUBLIC_KEY` is inlined at build time, so changing either
+requires a redeploy. Use the same public key as the API; leave it unset to ship
+without Web Push (push is skipped rather than erroring).
+
 If Render assigns a different subdomain to either service, update `API_URL` on
 the frontend and `WEB_ORIGIN` on the API, then redeploy. Free instances sleep
 after 15 minutes idle, so the first request after a pause wakes Next.js and then
 the API (~1–2 minutes).
 
-The browser only talks to the frontend origin either way:
+The browser only talks to the frontend origin:
 
 - `/api/*` → BFF proxy → Express
 - `/uploads/*` → rewrite → Express

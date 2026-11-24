@@ -21,7 +21,7 @@ uploaded directly to Cloudinary with server-signed requests.
 Browser
   │  same-origin requests only
   ▼
-Next.js (Vercel)
+Next.js (Render)
   ├── Server Components ──► apiFetch() ──► Express API (Render)
   ├── /api/* BFF proxy ───────────────────► Express API
   └── /uploads/* rewrite ─────────────────► Express (legacy/local photos)
@@ -435,13 +435,13 @@ docs/                         Architecture and deployment notes
 
 ## Deployment
 
-Two supported layouts. Both use the same API, database, and integrations:
+Everything deploys on Render. External providers are unchanged:
 
 - **PostgreSQL** → **Supabase** (session pooler connection string).
 - **Photos** → Cloudinary.
 - **Email** → **Gmail API** (`EMAIL_MODE=gmail`).
 
-**Option A — everything on Render.** `render.yaml` defines two web services:
+`render.yaml` defines two web services:
 
 | Service          | Root | Start            | Health        |
 | ---------------- | ---- | ---------------- | ------------- |
@@ -460,11 +460,7 @@ public key is inlined at build time too.
 Free instances sleep after 15 minutes of inactivity, so the first request after
 idle waits for Next.js and then the API to wake (~1–2 minutes).
 
-**Option B — Vercel + Render.** Deploy only `uniformity-api` from the
-Blueprint, then import the repository into Vercel with
-`API_URL=https://<api>.onrender.com`. This avoids the cold start.
-
-After the first deploy of either option:
+After the first deploy:
 
 1. Set the API environment variables from `api/.env.example` (`NODE_ENV=production`,
    `DATABASE_URL` from Supabase, JWT secrets, `WEB_ORIGIN=https://<frontend>`,

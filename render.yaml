@@ -27,7 +27,7 @@ services:
       - key: JWT_REFRESH_SECRET
         generateValue: true
       # Browser origin of the frontend service below. Update this if Render
-      # assigns a different subdomain (or if you switch the frontend to Vercel).
+      # assigns a different subdomain.
       - key: WEB_ORIGIN
         value: https://uniformity-web.onrender.com
       - key: CLOUDINARY_CLOUD_NAME

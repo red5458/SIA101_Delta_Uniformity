@@ -4,7 +4,7 @@ Uniformity is split into two independently deployable applications:
 
 ```
 ┌──────────────────────────┐        ┌──────────────────────────┐
-│ Next.js (Vercel)         │        │ Express API (Render)     │
+│ Next.js (Render)         │        │ Express API (Render)     │
 │                          │        │                          │
 │ Server Components        │ HTTPS  │ Routes → Controllers     │
 │  └─ apiFetch() ──────────┼───────►│          │               │
